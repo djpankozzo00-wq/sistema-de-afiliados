@@ -16,14 +16,15 @@ export async function POST(request: Request) {
   try {
     const body = await request.json() as { credentials?: Credentials }
     const credentials = body.credentials || {}
-    if (!credentials.appId || !credentials.secretKey || !credentials.affiliateId) {
+    const secretKey = credentials.secretKey || process.env.API_KEY || ''
+    if (!credentials.appId || !secretKey || !credentials.affiliateId) {
       return NextResponse.json({ products: [], error: 'Configure App ID, Secret Key e Affiliate ID para ativar a busca ao vivo.' }, { status: 200 })
     }
 
     const endpoint = process.env.SHOPEE_AFFILIATE_API_URL || 'https://open-api.affiliate.shopee.com.br/graphql'
     const query = `query { productOfferV2(shopId: 0, limit: 10, sortType: 2) { nodes { productName imageUrl priceMin priceMax rating discount link } } }`
     const payload = JSON.stringify({ query })
-    const response = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `SHA256 Credential=${credentials.appId}, Signature=${sign(credentials.appId, credentials.secretKey, payload)}` }, body: payload, cache: 'no-store' })
+    const response = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `SHA256 Credential=${credentials.appId}, Signature=${sign(credentials.appId, secretKey, payload)}` }, body: payload, cache: 'no-store' })
     const data = await response.json()
     if (!response.ok || data.errors) return NextResponse.json({ products: [], error: data.errors?.[0]?.message || 'A Shopee recusou a consulta.' }, { status: 502 })
     const nodes = data.data?.productOfferV2?.nodes || []

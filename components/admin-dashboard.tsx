@@ -5,7 +5,7 @@ import { CheckCircle2, Copy, Download, KeyRound, Loader2, RefreshCw, Search, Sen
 
 type Product = { id: string; title: string; imageUrl: string; originalPrice: number; dealPrice: number; rating: number; stock: number; affiliateUrl: string; caption: string }
 type Credentials = { appId: string; secretKey: string; affiliateId: string }
-const emptyCredentials: Credentials = { appId: '', secretKey: '', affiliateId: '' }
+const emptyCredentials: Credentials = { appId: '18336041241', secretKey: '', affiliateId: '18336041241' }
 const fallbackProducts: Product[] = [
   { id: '1', title: 'Fone Bluetooth Pro com cancelamento de ruído', imageUrl: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=700&q=85', originalPrice: 189.9, dealPrice: 79.9, rating: 4.9, stock: 83, affiliateUrl: 'https://shope.ee/achadinho-fone', caption: 'OFERTA RELÂMPAGO\n\nFone Bluetooth Pro por apenas R$ 79,90.\nDe R$ 189,90 por R$ 79,90 — 58% OFF.\n\nConfira: https://shope.ee/achadinho-fone' },
   { id: '2', title: 'Organizador inteligente para cozinha', imageUrl: 'https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=700&q=85', originalPrice: 119.9, dealPrice: 49.9, rating: 4.8, stock: 126, affiliateUrl: 'https://shope.ee/achadinho-organizador', caption: 'ACHADINHO DO DIA\n\nOrganizador inteligente por R$ 49,90.\nEconomize 58% e deixe tudo no lugar.\n\nLink: https://shope.ee/achadinho-organizador' },
