@@ -20,7 +20,7 @@ export function AdminDashboard() {
   const [releasedIds, setReleasedIds] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
   const [notice, setNotice] = useState('')
-  const [seconds, setSeconds] = useState(300)
+  const [seconds, setSeconds] = useState(20)
   const [query, setQuery] = useState('')
 
   useEffect(() => {
@@ -31,10 +31,10 @@ export function AdminDashboard() {
   }, [])
   const fetchDeals = useCallback(async () => {
     setLoading(true)
-    try { const response = await fetch('/api/shopee-live-deals', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ credentials }) }); const data = await response.json(); if (response.ok && data.products?.length) setProducts(data.products); else setNotice(data.error || 'Exibindo ofertas de demonstração. Configure suas credenciais para buscar ao vivo.') } catch { setNotice('Não foi possível atualizar agora. Exibindo as últimas ofertas.') } finally { setLoading(false); setSeconds(300) }
+    try { const response = await fetch('/api/shopee-live-deals', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ credentials }) }); const data = await response.json(); if (response.ok && data.products?.length) setProducts(data.products); else setNotice(data.error || 'Exibindo ofertas de demonstração. Configure suas credenciais para buscar ao vivo.') } catch { setNotice('Não foi possível atualizar agora. Exibindo as últimas ofertas.') } finally { setLoading(false); setSeconds(20) }
   }, [credentials])
-  useEffect(() => { const timer = window.setInterval(() => setSeconds((value) => value <= 1 ? 300 : value - 1), 1000); return () => window.clearInterval(timer) }, [])
-  useEffect(() => { if (seconds === 300) fetchDeals() }, [seconds, fetchDeals])
+  useEffect(() => { const timer = window.setInterval(() => setSeconds((value) => value <= 1 ? 20 : value - 1), 1000); return () => window.clearInterval(timer) }, [])
+  useEffect(() => { if (seconds === 20) fetchDeals() }, [seconds, fetchDeals])
   const saveCredentials = () => { window.localStorage.setItem('shopee-affiliate-credentials', JSON.stringify(credentials)); window.localStorage.setItem('shopee-affiliate-api-enabled', String(apiEnabled)); setShowSettings(false); setNotice(apiEnabled ? 'API Shopee ativada neste navegador.' : 'Configurações salvas.'); if (apiEnabled) fetchDeals() }
   const releaseOffer = async (product: Product) => { await copy(product.caption); setReleasedIds((ids) => ids.includes(product.id) ? ids : [...ids, product.id]); setNotice('Oferta solta: texto copiado. Agora você pode colar no WhatsApp ou Telegram.') }
   const filtered = useMemo(() => products.filter((p) => p.title.toLowerCase().includes(query.toLowerCase())), [products, query])
