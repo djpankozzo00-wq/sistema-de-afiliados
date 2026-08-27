@@ -14,8 +14,11 @@ function caption(title: string, price: number, original: number, url: string) {
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json() as { credentials?: Credentials }
+    const body = await request.json() as { credentials?: Credentials; refreshKey?: number }
     const credentials = body.credentials || {}
+    const refreshKey = Number.isFinite(body.refreshKey) ? Math.max(0, Number(body.refreshKey)) : 0
+    const page = (refreshKey % 20) + 1
+    const sortType = refreshKey % 2 === 0 ? 2 : 1
     const secretKey = !credentials.secretKey || credentials.secretKey === 'process.env.API_KEY' ? process.env.API_KEY || '' : credentials.secretKey
     const appId = credentials.appId || '18336041241'
     const affiliateId = credentials.affiliateId || '18336041241'
@@ -24,7 +27,7 @@ export async function POST(request: Request) {
     }
 
     const endpoint = process.env.SHOPEE_AFFILIATE_API_URL || 'https://open-api.affiliate.shopee.com.br/graphql'
-    const query = `query { productOfferV2(keyword: "", listType: 2, sortType: 2, page: 1, limit: 10) { nodes { itemId productName productLink offerLink imageUrl priceMin priceMax priceDiscountRate sales ratingStar commissionRate } } }`
+    const query = `query { productOfferV2(keyword: "", listType: 2, sortType: ${sortType}, page: ${page}, limit: 10) { nodes { itemId productName productLink offerLink imageUrl priceMin priceMax priceDiscountRate sales ratingStar commissionRate } } }`
     const payload = JSON.stringify({ query })
     const timestamp = Math.floor(Date.now() / 1000)
     const response = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `SHA256 Credential=${appId}, Timestamp=${timestamp}, Signature=${sign(appId, secretKey, payload, timestamp)}` }, body: payload, cache: 'no-store' })

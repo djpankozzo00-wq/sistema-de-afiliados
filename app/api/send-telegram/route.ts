@@ -13,10 +13,17 @@ export async function POST(request: Request) {
     const body = imageUrl
       ? { chat_id: chatId, photo: imageUrl, caption: caption.slice(0, 1024) }
       : { chat_id: chatId, text: caption.slice(0, 4096) }
-    const response = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), cache: 'no-store' })
-    const data = await response.json() as { ok?: boolean; description?: string }
-    if (!response.ok || !data.ok) return NextResponse.json({ error: data.description || 'O Telegram recusou o envio.' }, { status: 502 })
-    return NextResponse.json({ ok: true })
+    let response = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), cache: 'no-store' })
+    let data = await response.json() as { ok?: boolean; description?: string }
+
+    // Algumas imagens da Shopee bloqueiam o download pelo Telegram. Nesse caso,
+    // preservamos o disparo enviando a copy como texto em vez de falhar silenciosamente.
+    if ((!response.ok || !data.ok) && imageUrl) {
+      response = await fetch(`${base}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: chatId, text: caption.slice(0, 4096) }), cache: 'no-store' })
+      data = await response.json() as { ok?: boolean; description?: string }
+    }
+    if (!response.ok || !data.ok) return NextResponse.json({ error: data.description || 'O Telegram recusou o envio. Confirme se o bot está no grupo e pode publicar mensagens.' }, { status: 502 })
+    return NextResponse.json({ ok: true, sentAs: imageUrl && endpoint.endsWith('sendPhoto') ? 'photo' : 'text' })
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : 'Falha ao enviar para o Telegram.' }, { status: 500 })
   }
