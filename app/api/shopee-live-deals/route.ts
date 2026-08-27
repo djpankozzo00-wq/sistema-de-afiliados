@@ -38,7 +38,7 @@ export async function POST(request: Request) {
       const originalPrice = Number(item.priceMax || item.priceMin || 0)
       const dealPrice = Number(item.priceMin || 0)
       const affiliateUrl = item.offerLink || item.productLink || `https://shope.ee/${affiliateId}/${item.itemId || index}`
-      return { id: `${item.itemId || index}-${Date.now()}`, title: item.productName || 'Oferta Shopee', imageUrl: item.imageUrl || '', originalPrice, dealPrice, rating: Number(item.ratingStar || 0), stock: Number(item.sales || 0), affiliateUrl, caption: caption(item.productName || 'Oferta Shopee', dealPrice, originalPrice, affiliateUrl) }
+      return { id: String(item.itemId || `offer-${index}`), title: item.productName || 'Oferta Shopee', imageUrl: item.imageUrl || '', originalPrice, dealPrice, rating: Number(item.ratingStar || 0), stock: Number(item.sales || 0), affiliateUrl, caption: caption(item.productName || 'Oferta Shopee', dealPrice, originalPrice, affiliateUrl) }
     }).filter((item) => item.dealPrice > 0)
     return NextResponse.json({ products, refreshedAt: new Date().toISOString() })
   } catch (error) {
