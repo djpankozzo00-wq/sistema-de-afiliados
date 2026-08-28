@@ -5,7 +5,7 @@ import { CheckCircle2, Copy, Download, KeyRound, Loader2, RefreshCw, Search, Sen
 
 type Product = { id: string; title: string; imageUrl: string; originalPrice: number; dealPrice: number; rating: number; stock: number; affiliateUrl: string; caption: string }
 type Credentials = { appId: string; secretKey: string; affiliateId: string; telegramChatIds: string }
-const emptyCredentials: Credentials = { appId: '18336041241', secretKey: '', affiliateId: '18336041241', telegramChatIds: '' }
+const emptyCredentials: Credentials = { appId: '18336041241', secretKey: '', affiliateId: '18336041241', telegramChatIds: '-1003726473847' }
 const getTelegramChatIds = (value: string) => { const ids = value.split(/[\n,;]+/).map((id) => id.trim()).filter(Boolean); return ids.length ? [...new Set(ids)] : undefined }
 const fallbackProducts: Product[] = [
   { id: '1', title: 'Fone Bluetooth Pro com cancelamento de ruído', imageUrl: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=700&q=85', originalPrice: 189.9, dealPrice: 79.9, rating: 4.9, stock: 83, affiliateUrl: 'https://shope.ee/achadinho-fone', caption: '⚡ OFERTA RELÂMPAGO ⚡\n\n🎧 Fone Bluetooth Pro por apenas R$ 79,90!\n💰 De R$ 189,90 por R$ 79,90 — 58% OFF\n✨ Mais conforto e qualidade para o seu dia\n\n🛒 Confira aqui: https://shope.ee/achadinho-fone' },
@@ -28,7 +28,10 @@ export function AdminDashboard() {
   useEffect(() => {
     const saved = window.localStorage.getItem('shopee-affiliate-credentials')
     const enabled = window.localStorage.getItem('shopee-affiliate-api-enabled') === 'true'
-    if (saved) setCredentials(JSON.parse(saved))
+    if (saved) {
+      const parsed = JSON.parse(saved) as Partial<Credentials>
+      setCredentials({ ...emptyCredentials, ...parsed, telegramChatIds: parsed.telegramChatIds?.trim() || emptyCredentials.telegramChatIds })
+    }
     setApiEnabled(enabled)
     fetch('/api/send-telegram').then((response) => response.json()).then((data) => {
       const sent = Array.isArray(data.sentProductIds) ? data.sentProductIds.map(String) : []
