@@ -5,7 +5,7 @@ import { db } from '@/lib/db'
 
 export async function POST(request: Request) {
   try {
-    const { caption, imageUrl, productId, title, affiliateUrl, chatIds } = await request.json() as { caption?: string; imageUrl?: string; productId?: string; title?: string; affiliateUrl?: string; chatIds?: string[] }
+    const { caption, imageUrl, productId, title, affiliateUrl, chatIds, targetChatIds } = await request.json() as { caption?: string; imageUrl?: string; productId?: string; title?: string; affiliateUrl?: string; chatIds?: string[]; targetChatIds?: string[] }
     const token = process.env.TELEGRAM_BOT_TOKEN
     const defaultChatId = process.env.TELEGRAM_CHAT_ID
     if (!token) return NextResponse.json({ error: 'Configure TELEGRAM_BOT_TOKEN.' }, { status: 503 })
@@ -17,7 +17,8 @@ export async function POST(request: Request) {
 
     // Sempre inclui o grupo padrão do ambiente e soma os grupos enviados pelo painel.
     // Antes, quando chatIds existia, ele substituía TELEGRAM_CHAT_ID e apenas um destino recebia a oferta.
-    const destinationIds = [...new Set([defaultChatId, ...(chatIds || [])].map((id) => String(id ?? '').trim()).filter(Boolean))]
+    const requestedIds = Array.isArray(targetChatIds) && targetChatIds.length ? targetChatIds : [defaultChatId, ...(chatIds || [])]
+    const destinationIds = [...new Set(requestedIds.map((id) => String(id ?? '').trim()).filter(Boolean))]
     if (!destinationIds.length) return NextResponse.json({ error: 'Configure TELEGRAM_CHAT_ID ou adicione IDs de grupos nas configurações.' }, { status: 503 })
 
     const results: { chatId: string; success: boolean; method: string; error?: string }[] = []
@@ -74,7 +75,8 @@ export async function POST(request: Request) {
 export async function GET() {
   try {
     const result = await db.execute(sql`SELECT product_id FROM telegram_sent_offers ORDER BY sent_at DESC`)
-    return NextResponse.json({ ok: true, sentProductIds: result.rows.map((row) => String(row.product_id)) })
+    const configuredChatIds = [process.env.TELEGRAM_CHAT_ID].filter(Boolean).map(String)
+    return NextResponse.json({ ok: true, sentProductIds: result.rows.map((row) => String(row.product_id)), configuredChatIds })
   } catch {
     return NextResponse.json({ ok: false, sentProductIds: [], error: 'Não foi possível consultar o histórico de ofertas.' }, { status: 500 })
   }
