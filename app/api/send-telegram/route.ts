@@ -15,7 +15,9 @@ export async function POST(request: Request) {
     const existing = await db.execute(sql`SELECT product_id FROM telegram_sent_offers WHERE product_id = ${productId} LIMIT 1`)
     if (existing.rows.length) return NextResponse.json({ alreadySent: true, error: 'Esta oferta já foi enviada anteriormente. Busque outra oferta.' }, { status: 409 })
 
-    const destinationIds = [...new Set((chatIds && chatIds.length > 0 ? chatIds : [defaultChatId]).map((id) => String(id).trim()).filter(Boolean))]
+    // Sempre inclui o grupo padrão do ambiente e soma os grupos enviados pelo painel.
+    // Antes, quando chatIds existia, ele substituía TELEGRAM_CHAT_ID e apenas um destino recebia a oferta.
+    const destinationIds = [...new Set([defaultChatId, ...(chatIds || [])].map((id) => String(id ?? '').trim()).filter(Boolean))]
     if (!destinationIds.length) return NextResponse.json({ error: 'Configure TELEGRAM_CHAT_ID ou adicione IDs de grupos nas configurações.' }, { status: 503 })
 
     const results: { chatId: string; success: boolean; method: string; error?: string }[] = []
