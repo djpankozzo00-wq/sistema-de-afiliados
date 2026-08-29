@@ -15,7 +15,7 @@ function caption(title: string, price: number, original: number, url: string) {
 ${productEmoji} ${title}
 
 💰 Por apenas R$ ${price.toFixed(2).replace('.', ',')}!
-${discount > 0 ? `🏷️ De R$ ${original.toFixed(2).replace('.', ',')} por R$ ${price.toFixed(2).replace('.', ',')} — ${discount}% OFF` : `🏷️ Preço atual: R$ ${price.toFixed(2).replace('.', ',')}`}\n⭐ Achadinho com preço especial
+${discount > 0 ? `🏷️ De R$ ${original.toFixed(2).replace('.', ',')} por R$ ${price.toFixed(2).replace('.', ',')} — ${discount}% OFF` : ''}\n⭐ Achadinho com preço especial
 
 🚀 Confira antes que acabe:
 ${url}`
