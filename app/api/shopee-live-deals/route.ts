@@ -8,15 +8,14 @@ function sign(appId: string, secretKey: string, payload: string, timestamp: numb
 }
 
 function caption(title: string, price: number, original: number, url: string) {
-  const discount = Math.round((1 - price / original) * 100)
+  const discount = original > price ? Math.round((1 - price / original) * 100) : 0
   const productEmoji = /fone|áudio|headset|caixa de som/i.test(title) ? '🎧' : /tênis|sapato|sandália|chinelo/i.test(title) ? '👟' : /cozinha|panela|organizador|casa/i.test(title) ? '🏠' : /beleza|maquiagem|perfume|skincare/i.test(title) ? '✨' : /celular|eletrônico|smart|cabo|carregador/i.test(title) ? '📱' : '🛍️'
   return `🔥 OFERTA RELÂMPAGO 🔥
 
 ${productEmoji} ${title}
 
 💰 Por apenas R$ ${price.toFixed(2).replace('.', ',')}!
-🏷️ De R$ ${original.toFixed(2).replace('.', ',')} por R$ ${price.toFixed(2).replace('.', ',')} — ${discount}% OFF
-⭐ Achadinho com preço especial
+${discount > 0 ? `🏷️ De R$ ${original.toFixed(2).replace('.', ',')} por R$ ${price.toFixed(2).replace('.', ',')} — ${discount}% OFF` : `🏷️ Preço atual: R$ ${price.toFixed(2).replace('.', ',')}`}\n⭐ Achadinho com preço especial
 
 🚀 Confira antes que acabe:
 ${url}`
