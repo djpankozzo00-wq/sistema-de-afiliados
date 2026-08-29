@@ -40,12 +40,13 @@ export async function POST(request: Request) {
     const payload = JSON.stringify({ query })
     const timestamp = Math.floor(Date.now() / 1000)
     const response = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `SHA256 Credential=${appId}, Timestamp=${timestamp}, Signature=${sign(appId, secretKey, payload, timestamp)}` }, body: payload, cache: 'no-store' })
-    const data = await response.json() as { data?: { productOfferV2?: { nodes?: Array<{ itemId?: string | number; productName?: string; imageUrl?: string; priceMin?: number; priceMax?: number; ratingStar?: number; sales?: number; offerLink?: string; productLink?: string }> } }; errors?: Array<{ message?: string }> }
+    const data = await response.json() as { data?: { productOfferV2?: { nodes?: Array<{ itemId?: string | number; productName?: string; imageUrl?: string; priceMin?: number; priceMax?: number; priceDiscountRate?: number; ratingStar?: number; sales?: number; offerLink?: string; productLink?: string }> } }; errors?: Array<{ message?: string }> }
     if (!response.ok || data.errors) return NextResponse.json({ products: [], error: data.errors?.[0]?.message || 'A Shopee recusou a consulta. Verifique App ID, Secret Key e o endpoint da sua conta.' }, { status: 502 })
     const nodes = data.data?.productOfferV2?.nodes || []
     const products = nodes.map((item, index) => {
-      const originalPrice = Number(item.priceMax || item.priceMin || 0)
       const dealPrice = Number(item.priceMin || 0)
+      const discountRate = Number(item.priceDiscountRate || 0)
+      const originalPrice = discountRate > 0 && discountRate < 100 ? dealPrice / (1 - discountRate / 100) : Number(item.priceMax || dealPrice || 0)
       const affiliateUrl = item.offerLink || item.productLink || `https://shope.ee/${affiliateId}/${item.itemId || index}`
       return { id: String(item.itemId || `offer-${index}`), title: item.productName || 'Oferta Shopee', imageUrl: item.imageUrl || '', originalPrice, dealPrice, rating: Number(item.ratingStar || 0), stock: Number(item.sales || 0), affiliateUrl, caption: caption(item.productName || 'Oferta Shopee', dealPrice, originalPrice, affiliateUrl) }
     }).filter((item) => item.dealPrice > 0)
