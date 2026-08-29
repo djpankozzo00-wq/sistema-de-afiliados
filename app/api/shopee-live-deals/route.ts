@@ -7,15 +7,21 @@ function sign(appId: string, secretKey: string, payload: string, timestamp: numb
   return createHash('sha256').update(`${appId}${timestamp}${payload}${secretKey}`).digest('hex')
 }
 
+function struck(value: string) {
+  return value.split('').map((character) => `${character}\u0336`).join('')
+}
+
 function caption(title: string, price: number, original: number, url: string) {
   const discount = original > price ? Math.round((1 - price / original) * 100) : 0
+  const formattedPrice = price.toFixed(2).replace('.', ',')
+  const formattedOriginal = original.toFixed(2).replace('.', ',')
   const productEmoji = /fone|áudio|headset|caixa de som/i.test(title) ? '🎧' : /tênis|sapato|sandália|chinelo/i.test(title) ? '👟' : /cozinha|panela|organizador|casa/i.test(title) ? '🏠' : /beleza|maquiagem|perfume|skincare/i.test(title) ? '✨' : /celular|eletrônico|smart|cabo|carregador/i.test(title) ? '📱' : '🛍️'
   return `🔥 OFERTA RELÂMPAGO 🔥
 
 ${productEmoji} ${title}
 
-💰 Por apenas R$ ${price.toFixed(2).replace('.', ',')}!
-${discount > 0 ? `🏷️ De R$ ${original.toFixed(2).replace('.', ',')} por R$ ${price.toFixed(2).replace('.', ',')} — ${discount}% OFF` : ''}\n⭐ Achadinho com preço especial
+💰 Por apenas R$ ${formattedPrice}!
+${discount > 0 ? `🏷️ De ${struck(`R$ ${formattedOriginal}`)} por R$ ${formattedPrice} — ${discount}% OFF` : ''}\n⭐ Achadinho com preço especial
 
 🚀 Confira antes que acabe:
 ${url}`
