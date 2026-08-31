@@ -12,8 +12,7 @@ export async function POST(request: Request) {
     if (!caption?.trim()) return NextResponse.json({ error: 'A oferta não possui texto.' }, { status: 400 })
     if (!productId) return NextResponse.json({ error: 'Identificador do produto ausente.' }, { status: 400 })
 
-    const existing = await db.execute(sql`SELECT product_id FROM telegram_sent_offers WHERE product_id = ${productId} LIMIT 1`)
-    if (existing.rows.length) return NextResponse.json({ alreadySent: true, error: 'Esta oferta já foi enviada anteriormente. Busque outra oferta.' }, { status: 409 })
+        // O bloqueio é verificado por produto + grupo, permitindo enviar a mesma oferta a outro grupo.
 
     // Sempre inclui o grupo padrão do ambiente e soma os grupos enviados pelo painel.
     // Antes, quando chatIds existia, ele substituía TELEGRAM_CHAT_ID e apenas um destino recebia a oferta.
@@ -25,6 +24,11 @@ export async function POST(request: Request) {
     const base = `https://api.telegram.org/bot${token}`
 
     for (const chatId of destinationIds) {
+      const existing = await db.execute(sql`SELECT product_id FROM telegram_sent_offers WHERE product_id = ${productId} AND chat_id = ${chatId} LIMIT 1`)
+      if (existing.rows.length) {
+        results.push({ chatId, success: false, method: 'skipped', error: 'Oferta já enviada anteriormente neste grupo' })
+        continue
+      }
       try {
         let endpoint = imageUrl ? `${base}/sendPhoto` : `${base}/sendMessage`
         let body = imageUrl
@@ -58,7 +62,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: `Falha ao enviar para ${totalCount} destino(s). ${results[0]?.error || 'Confirme o bot está nos grupos e pode publicar.'}` }, { status: 502 })
     }
 
-    await db.execute(sql`INSERT INTO telegram_sent_offers (product_id, title, affiliate_url) VALUES (${productId}, ${title || 'Oferta Shopee'}, ${affiliateUrl || ''}) ON CONFLICT (product_id) DO NOTHING`)
+    for (const result of results.filter((item) => item.success)) {
+      await db.execute(sql`INSERT INTO telegram_sent_offers (product_id, chat_id, title, affiliate_url) VALUES (${productId}, ${result.chatId}, ${title || 'Oferta Shopee'}, ${affiliateUrl || ''})`)
+    }
 
     const summary = totalCount === 1
       ? (allSucceeded ? '✓ Oferta enviada com sucesso.' : `✗ Falha ao enviar: ${results[0]?.error || 'erro desconhecido'}`)
