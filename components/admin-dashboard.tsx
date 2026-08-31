@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { CheckCircle2, Copy, Download, KeyRound, Loader2, RefreshCw, Search, Send, Settings2, ShieldCheck, Sparkles, Star, TrendingDown, X } from 'lucide-react'
 
 type Product = { id: string; title: string; imageUrl: string; originalPrice: number; dealPrice: number; rating: number; stock: number; affiliateUrl: string; caption: string }
@@ -30,6 +30,7 @@ export function AdminDashboard() {
   const [searchMode, setSearchMode] = useState('all')
   const [searchKeyword, setSearchKeyword] = useState('')
   const [searchLimit, setSearchLimit] = useState('20')
+  const initialFetchDone = useRef(false)
 
   useEffect(() => {
     const saved = window.localStorage.getItem('shopee-affiliate-credentials')
@@ -53,6 +54,12 @@ export function AdminDashboard() {
     setLoading(true)
     try { const response = await fetch('/api/shopee-live-deals', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ credentials, refreshKey: requestedRefreshKey, mode: searchMode, keyword: searchKeyword, limit: Number(searchLimit) }) }); const data = await response.json(); const freshProducts = (data.products || []).filter((product: Product) => !seenIds.includes(product.id)); if (response.ok && freshProducts.length) { setProducts(freshProducts); setSeenIds((ids) => [...ids, ...freshProducts.map((product: Product) => product.id)]); setNotice(`${freshProducts.length} ofertas novas encontradas.`); setAutoRefresh(false); setCountdown(3) } else if (response.ok && data.products?.length) { setNotice('A Shopee retornou ofertas já exibidas. Clique novamente para buscar outra página.') } else setNotice(data.error || 'Configure suas credenciais para buscar ao vivo.') } catch { setNotice('Não foi possível buscar ofertas agora. Tente novamente.') } finally { setLoading(false) }
   }, [credentials, refreshKey, seenIds, searchMode, searchKeyword, searchLimit])
+  useEffect(() => {
+    if (apiEnabled && !initialFetchDone.current) {
+      initialFetchDone.current = true
+      fetchDeals(0)
+    }
+  }, [apiEnabled, fetchDeals])
   useEffect(() => { if (!autoRefresh) { setCountdown(3); return } const timer = window.setInterval(() => setCountdown((value) => { if (value <= 1) { const next = refreshKey + 1; setRefreshKey(next); fetchDeals(next); return 3 } return value - 1 }), 1000); return () => window.clearInterval(timer) }, [autoRefresh, fetchDeals, refreshKey])
   const saveCredentials = () => { window.localStorage.setItem('shopee-affiliate-credentials', JSON.stringify(credentials)); window.localStorage.setItem('shopee-affiliate-api-enabled', String(apiEnabled)); setShowSettings(false); setNotice(apiEnabled ? 'API Shopee ativada neste navegador.' : 'Configurações salvas.'); if (apiEnabled) fetchDeals() }
   const releaseOffer = async (product: Product, targetChatIds?: string[]) => { setLoading(true); try { const chatIds = getTelegramChatIds(credentials.telegramChatIds); const response = await fetch('/api/send-telegram', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ productId: product.id, title: product.title, affiliateUrl: product.affiliateUrl, caption: product.caption, imageUrl: product.imageUrl, chatIds, targetChatIds }) }); const data = await response.json(); if (!response.ok) throw new Error(data.error || 'Falha no Telegram'); setReleasedIds((ids) => ids.includes(product.id) ? ids : [...ids, product.id]); setNotice(data.summary || 'Oferta(s) enviada(s) para o Telegram.'); } catch (error) { setNotice(error instanceof Error ? error.message : 'Não foi possível enviar para o Telegram.'); } finally { setLoading(false) } }
