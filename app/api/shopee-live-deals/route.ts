@@ -29,11 +29,15 @@ ${url}`
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json() as { credentials?: Credentials; refreshKey?: number }
+    const body = await request.json() as { credentials?: Credentials; refreshKey?: number; mode?: string; keyword?: string; limit?: number }
     const credentials = body.credentials || {}
     const refreshKey = Number.isFinite(body.refreshKey) ? Math.max(0, Number(body.refreshKey)) : 0
+    const mode = body.mode || 'all'
+    const keyword = typeof body.keyword === 'string' ? body.keyword.trim().slice(0, 100) : ''
+    const requestedLimit = Math.min(50, Math.max(10, Number(body.limit) || 20))
     const page = (refreshKey % 20) + 1
-    const sortType = refreshKey % 2 === 0 ? 2 : 1
+    const sortType = mode === 'commission-high' ? 4 : mode === 'commission-low' ? 5 : mode === 'best-selling' ? 2 : mode === 'week' || mode === 'month' ? 2 : 1
+    const listType = mode === 'week' || mode === 'month' ? 1 : 2
     const secretKey = !credentials.secretKey || credentials.secretKey === 'process.env.API_KEY' ? process.env.API_KEY || '' : credentials.secretKey
     const appId = credentials.appId || '18336041241'
     const affiliateId = credentials.affiliateId || '18336041241'
@@ -42,7 +46,8 @@ export async function POST(request: Request) {
     }
 
     const endpoint = process.env.SHOPEE_AFFILIATE_API_URL || 'https://open-api.affiliate.shopee.com.br/graphql'
-    const query = `query { productOfferV2(keyword: "", listType: 2, sortType: ${sortType}, page: ${page}, limit: 10) { nodes { itemId productName productLink offerLink imageUrl priceMin priceMax priceDiscountRate sales ratingStar commissionRate } } }`
+    const escapedKeyword = keyword.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
+    const query = `query { productOfferV2(keyword: "${escapedKeyword}", listType: ${listType}, sortType: ${sortType}, page: ${page}, limit: ${requestedLimit}) { nodes { itemId productName productLink offerLink imageUrl priceMin priceMax priceDiscountRate sales ratingStar commissionRate } } }`
     const payload = JSON.stringify({ query })
     const timestamp = Math.floor(Date.now() / 1000)
     const response = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `SHA256 Credential=${appId}, Timestamp=${timestamp}, Signature=${sign(appId, secretKey, payload, timestamp)}` }, body: payload, cache: 'no-store' })
