@@ -80,9 +80,9 @@ export async function POST(request: Request) {
 
 export async function GET() {
   try {
-    const result = await db.execute(sql`SELECT product_id FROM telegram_sent_offers ORDER BY sent_at DESC`)
+    const result = await db.execute(sql`SELECT product_id, title, sent_at FROM telegram_sent_offers ORDER BY sent_at DESC LIMIT 500`)
     const configuredChatIds = [process.env.TELEGRAM_CHAT_ID].filter(Boolean).map(String)
-    return NextResponse.json({ ok: true, sentProductIds: result.rows.map((row) => String(row.product_id)), configuredChatIds })
+    return NextResponse.json({ ok: true, sentProductIds: result.rows.map((row) => String(row.product_id)), history: result.rows, configuredChatIds })
   } catch {
     return NextResponse.json({ ok: false, sentProductIds: [], error: 'Não foi possível consultar o histórico de ofertas.' }, { status: 500 })
   }
