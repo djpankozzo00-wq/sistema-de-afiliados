@@ -33,7 +33,7 @@ export function AdminDashboard() {
   const [countdown, setCountdown] = useState(1)
   const [searchMode, setSearchMode] = useState('all')
   const [searchKeyword, setSearchKeyword] = useState('')
-  const [searchLimit, setSearchLimit] = useState('15')
+  const [searchLimit, setSearchLimit] = useState('5')
   const initialFetchDone = useRef(false)
 
   useEffect(() => {
