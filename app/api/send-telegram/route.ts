@@ -24,8 +24,9 @@ export async function POST(request: Request) {
     const base = `https://api.telegram.org/bot${token}`
 
     for (const chatId of destinationIds) {
-      const existing = await db.execute(sql`SELECT product_id FROM telegram_sent_offers WHERE product_id = ${productId} AND chat_id = ${chatId} LIMIT 1`)
-      if (existing.rows.length) {
+      // Reserva atômica: impede dois cliques/requisições simultâneas de publicar a mesma oferta no mesmo grupo.
+      const reservation = await db.execute(sql`INSERT INTO telegram_sent_offers (product_id, chat_id, title, affiliate_url) VALUES (${productId}, ${chatId}, ${title || 'Oferta Shopee'}, ${affiliateUrl || ''}) ON CONFLICT (product_id, chat_id) DO NOTHING`)
+      if (!reservation.rowCount) {
         results.push({ chatId, success: false, method: 'skipped', error: 'Oferta já enviada anteriormente neste grupo' })
         continue
       }
@@ -45,11 +46,13 @@ export async function POST(request: Request) {
         }
 
         if (!response.ok || !data.ok) {
+          await db.execute(sql`DELETE FROM telegram_sent_offers WHERE product_id = ${productId} AND chat_id = ${chatId}`)
           results.push({ chatId, success: false, method: 'unknown', error: data.description || 'Envio recusado' })
         } else {
           results.push({ chatId, success: true, method: endpoint.endsWith('sendPhoto') ? 'photo' : 'text' })
         }
       } catch (err) {
+        await db.execute(sql`DELETE FROM telegram_sent_offers WHERE product_id = ${productId} AND chat_id = ${chatId}`)
         results.push({ chatId, success: false, method: 'unknown', error: err instanceof Error ? err.message : 'Erro ao enviar' })
       }
     }
