@@ -34,7 +34,7 @@ export async function POST(request: Request) {
     const refreshKey = Number.isFinite(body.refreshKey) ? Math.max(0, Number(body.refreshKey)) : 0
     const mode = body.mode || 'all'
     const keyword = typeof body.keyword === 'string' ? body.keyword.trim().slice(0, 100) : ''
-    const requestedLimit = Math.min(15, Math.max(5, Number(body.limit) || 15))
+    const requestedLimit = Math.min(50, Math.max(5, Number(body.limit) || 5))
     const page = (refreshKey % 20) + 1
     const sortType = mode === 'commission-high' ? 4 : mode === 'commission-low' ? 5 : mode === 'best-selling' ? 2 : mode === 'week' || mode === 'month' ? 2 : 1
     const listType = mode === 'week' || mode === 'month' ? 1 : 2
@@ -59,7 +59,7 @@ export async function POST(request: Request) {
       const discountRate = Number(item.priceDiscountRate || 0)
       const originalPrice = discountRate > 0 && discountRate < 100 ? dealPrice / (1 - discountRate / 100) : Number(item.priceMax || dealPrice || 0)
       const affiliateUrl = item.offerLink || item.productLink || `https://shope.ee/${affiliateId}/${item.itemId || index}`
-      return { id: String(item.itemId || `offer-${index}`), title: item.productName || 'Oferta Shopee', imageUrl: item.imageUrl || '', originalPrice, dealPrice, rating: Number(item.ratingStar || 0), stock: Number(item.sales || 0), affiliateUrl, caption: caption(item.productName || 'Oferta Shopee', dealPrice, originalPrice, affiliateUrl) }
+      return { id: String(item.itemId || `offer-${index}`), title: item.productName || 'Oferta Shopee', imageUrl: item.imageUrl || '', originalPrice, dealPrice, rating: Number(item.ratingStar || 0), commissionRate: Number(item.commissionRate || 0), stock: Number(item.sales || 0), affiliateUrl, caption: caption(item.productName || 'Oferta Shopee', dealPrice, originalPrice, affiliateUrl) }
     }).filter((item) => item.dealPrice > 0)
     return NextResponse.json({ products, refreshedAt: new Date().toISOString() })
   } catch (error) {
