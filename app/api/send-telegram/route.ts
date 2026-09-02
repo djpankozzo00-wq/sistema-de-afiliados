@@ -24,12 +24,13 @@ export async function POST(request: Request) {
     const base = `https://api.telegram.org/bot${token}`
 
     for (const chatId of destinationIds) {
-      // Reserva atômica: impede dois cliques/requisições simultâneas de publicar a mesma oferta no mesmo grupo.
-      const reservation = await db.execute(sql`INSERT INTO telegram_sent_offers (product_id, chat_id, title, affiliate_url) VALUES (${productId}, ${chatId}, ${title || 'Oferta Shopee'}, ${affiliateUrl || ''}) ON CONFLICT (product_id, chat_id) DO UPDATE SET title = EXCLUDED.title, affiliate_url = EXCLUDED.affiliate_url, sent_at = NOW() WHERE telegram_sent_offers.sent_at < NOW() - INTERVAL '24 hours'`)
-      if (!reservation.rowCount) {
-        results.push({ chatId, success: false, method: 'skipped', error: 'Oferta já enviada anteriormente neste grupo' })
+      // O bloqueio é por produto + grupo nas últimas 24 horas. Registros antigos permanecem no histórico, mas não bloqueiam uma nova publicação.
+      const recent = await db.execute(sql`SELECT 1 FROM telegram_sent_offers WHERE product_id = ${productId} AND chat_id = ${chatId} AND sent_at >= NOW() - INTERVAL '24 hours' LIMIT 1`)
+      if (recent.rowCount) {
+        results.push({ chatId, success: false, method: 'skipped', error: 'Oferta já enviada anteriormente neste grupo nas últimas 24 horas' })
         continue
       }
+      await db.execute(sql`INSERT INTO telegram_sent_offers (product_id, chat_id, title, affiliate_url) VALUES (${productId}, ${chatId}, ${title || 'Oferta Shopee'}, ${affiliateUrl || ''})`)
       try {
         let endpoint = imageUrl ? `${base}/sendPhoto` : `${base}/sendMessage`
         let body = imageUrl
@@ -79,7 +80,9 @@ export async function POST(request: Request) {
 
 export async function GET() {
   try {
-    const result = await db.execute(sql`SELECT product_id, title, sent_at FROM telegram_sent_offers ORDER BY sent_at DESC LIMIT 500`)
+    // O painel mostra somente as publicações de hoje para facilitar o controle diário.
+    // A consulta de bloqueio acima continua usando uma janela móvel de 24 horas por grupo.
+    const result = await db.execute(sql`SELECT product_id, title, sent_at FROM telegram_sent_offers WHERE sent_at >= CURRENT_DATE ORDER BY sent_at DESC LIMIT 500`)
     const recent = await db.execute(sql`SELECT DISTINCT product_id FROM telegram_sent_offers WHERE sent_at >= NOW() - INTERVAL '24 hours'`)
     const configuredChatIds = [process.env.TELEGRAM_CHAT_ID].filter(Boolean).map(String)
     return NextResponse.json({ ok: true, sentProductIds: recent.rows.map((row) => String(row.product_id)), history: result.rows, configuredChatIds })
