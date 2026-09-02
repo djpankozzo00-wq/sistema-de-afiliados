@@ -82,7 +82,7 @@ export async function GET() {
   try {
     // O painel mostra somente as publicações de hoje para facilitar o controle diário.
     // A consulta de bloqueio acima continua usando uma janela móvel de 24 horas por grupo.
-    const result = await db.execute(sql`SELECT product_id, title, sent_at FROM telegram_sent_offers WHERE sent_at >= CURRENT_DATE ORDER BY sent_at DESC LIMIT 500`)
+    const result = await db.execute(sql`SELECT product_id, title, sent_at FROM telegram_sent_offers WHERE sent_at >= CURRENT_DATE AND sent_at < CURRENT_DATE + INTERVAL '1 day' ORDER BY sent_at DESC`)
     const recent = await db.execute(sql`SELECT DISTINCT product_id FROM telegram_sent_offers WHERE sent_at >= NOW() - INTERVAL '24 hours'`)
     const configuredChatIds = [process.env.TELEGRAM_CHAT_ID].filter(Boolean).map(String)
     return NextResponse.json({ ok: true, sentProductIds: recent.rows.map((row) => String(row.product_id)), history: result.rows, configuredChatIds })
