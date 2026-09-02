@@ -25,7 +25,7 @@ export async function POST(request: Request) {
 
     for (const chatId of destinationIds) {
       // Reserva atômica: impede dois cliques/requisições simultâneas de publicar a mesma oferta no mesmo grupo.
-      const reservation = await db.execute(sql`INSERT INTO telegram_sent_offers (product_id, chat_id, title, affiliate_url) VALUES (${productId}, ${chatId}, ${title || 'Oferta Shopee'}, ${affiliateUrl || ''}) ON CONFLICT (product_id, chat_id) DO NOTHING`)
+      const reservation = await db.execute(sql`INSERT INTO telegram_sent_offers (product_id, chat_id, title, affiliate_url) VALUES (${productId}, ${chatId}, ${title || 'Oferta Shopee'}, ${affiliateUrl || ''}) ON CONFLICT (product_id, chat_id) DO UPDATE SET title = EXCLUDED.title, affiliate_url = EXCLUDED.affiliate_url, sent_at = NOW() WHERE telegram_sent_offers.sent_at < NOW() - INTERVAL '24 hours'`)
       if (!reservation.rowCount) {
         results.push({ chatId, success: false, method: 'skipped', error: 'Oferta já enviada anteriormente neste grupo' })
         continue
@@ -80,8 +80,9 @@ export async function POST(request: Request) {
 export async function GET() {
   try {
     const result = await db.execute(sql`SELECT product_id, title, sent_at FROM telegram_sent_offers ORDER BY sent_at DESC LIMIT 500`)
+    const recent = await db.execute(sql`SELECT DISTINCT product_id FROM telegram_sent_offers WHERE sent_at >= NOW() - INTERVAL '24 hours'`)
     const configuredChatIds = [process.env.TELEGRAM_CHAT_ID].filter(Boolean).map(String)
-    return NextResponse.json({ ok: true, sentProductIds: result.rows.map((row) => String(row.product_id)), history: result.rows, configuredChatIds })
+    return NextResponse.json({ ok: true, sentProductIds: recent.rows.map((row) => String(row.product_id)), history: result.rows, configuredChatIds })
   } catch {
     return NextResponse.json({ ok: false, sentProductIds: [], error: 'Não foi possível consultar o histórico de ofertas.' }, { status: 500 })
   }
