@@ -65,10 +65,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: `Falha ao enviar para ${totalCount} destino(s). ${results[0]?.error || 'Confirme o bot está nos grupos e pode publicar.'}` }, { status: 502 })
     }
 
-    for (const result of results.filter((item) => item.success)) {
-      await db.execute(sql`INSERT INTO telegram_sent_offers (product_id, chat_id, title, affiliate_url) VALUES (${productId}, ${result.chatId}, ${title || 'Oferta Shopee'}, ${affiliateUrl || ''})`)
-    }
-
     const summary = totalCount === 1
       ? (allSucceeded ? '✓ Oferta enviada com sucesso.' : `✗ Falha ao enviar: ${results[0]?.error || 'erro desconhecido'}`)
       : (allSucceeded
