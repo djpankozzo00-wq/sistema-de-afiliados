@@ -91,9 +91,12 @@ export async function GET() {
     // O painel mostra somente as publicações de hoje para facilitar o controle diário.
     // A consulta de bloqueio acima continua usando uma janela móvel de 24 horas por grupo.
     const result = await db.execute(sql`SELECT product_id, title, sent_at FROM telegram_sent_offers WHERE sent_at >= CURRENT_DATE AND sent_at < CURRENT_DATE + INTERVAL '1 day' ORDER BY sent_at DESC`)
+    // O produto só volta a ficar disponível após o maior prazo configurado (7 dias).
+    // Assim ele não reaparece no painel enquanto ainda estiver bloqueado em nenhum grupo.
+    const blocked = await db.execute(sql`SELECT DISTINCT product_id FROM telegram_sent_offers WHERE sent_at >= NOW() - INTERVAL '7 days'`)
     const recent = await db.execute(sql`SELECT DISTINCT product_id FROM telegram_sent_offers WHERE sent_at >= NOW() - INTERVAL '24 hours'`)
     const configuredChatIds = [process.env.TELEGRAM_CHAT_ID].filter(Boolean).map(String)
-    return NextResponse.json({ ok: true, sentProductIds: recent.rows.map((row) => String(row.product_id)), history: result.rows, configuredChatIds })
+    return NextResponse.json({ ok: true, sentProductIds: recent.rows.map((row) => String(row.product_id)), blockedProductIds: blocked.rows.map((row) => String(row.product_id)), history: result.rows, configuredChatIds })
   } catch {
     return NextResponse.json({ ok: false, sentProductIds: [], error: 'Não foi possível consultar o histórico de ofertas.' }, { status: 500 })
   }
