@@ -24,17 +24,19 @@ export async function POST(request: Request) {
     const base = `https://api.telegram.org/bot${token}`
 
     for (const chatId of destinationIds) {
-      // O bloqueio é por produto + grupo nas últimas 24 horas. Registros antigos permanecem no histórico, mas não bloqueiam uma nova publicação.
-      const recent = await db.execute(sql`SELECT 1 FROM telegram_sent_offers WHERE product_id = ${productId} AND chat_id = ${chatId} AND sent_at >= NOW() - INTERVAL '24 hours' LIMIT 1`)
+      // Grupo 1 libera novamente após 24 horas; o Grupo 2 fica bloqueado por 7 dias.
+      // O prazo é aplicado por produto + grupo, sem impedir que a mesma oferta seja enviada a outro grupo.
+      const cooldown = chatId === defaultChatId ? '24 hours' : '7 days'
+      const recent = await db.execute(sql`SELECT 1 FROM telegram_sent_offers WHERE product_id = ${productId} AND chat_id = ${chatId} AND sent_at >= NOW() - ${cooldown}::interval LIMIT 1`)
       if (recent.rowCount) {
-        results.push({ chatId, success: false, method: 'skipped', error: 'Oferta já enviada anteriormente neste grupo nas últimas 24 horas' })
+        results.push({ chatId, success: false, method: 'skipped', error: 'Oferta já enviada anteriormente neste grupo dentro do prazo de bloqueio' })
         continue
       }
       // Reserva atômica: impede duas solicitações simultâneas de publicarem a mesma oferta no mesmo grupo.
       // Se já existir um registro protegido pelo índice do banco, apenas ignora este destino.
       const reservation = await db.execute(sql`INSERT INTO telegram_sent_offers (product_id, chat_id, title, affiliate_url) VALUES (${productId}, ${chatId}, ${title || 'Oferta Shopee'}, ${affiliateUrl || ''}) ON CONFLICT DO NOTHING`)
       if (!reservation.rowCount) {
-        results.push({ chatId, success: false, method: 'skipped', error: 'Oferta já enviada anteriormente neste grupo nas últimas 24 horas' })
+        results.push({ chatId, success: false, method: 'skipped', error: 'Oferta já enviada anteriormente neste grupo dentro do prazo de bloqueio' })
         continue
       }
       try {
