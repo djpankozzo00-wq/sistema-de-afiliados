@@ -30,7 +30,13 @@ export async function POST(request: Request) {
         results.push({ chatId, success: false, method: 'skipped', error: 'Oferta já enviada anteriormente neste grupo nas últimas 24 horas' })
         continue
       }
-      await db.execute(sql`INSERT INTO telegram_sent_offers (product_id, chat_id, title, affiliate_url) VALUES (${productId}, ${chatId}, ${title || 'Oferta Shopee'}, ${affiliateUrl || ''})`)
+      // Reserva atômica: impede duas solicitações simultâneas de publicarem a mesma oferta no mesmo grupo.
+      // Se já existir um registro protegido pelo índice do banco, apenas ignora este destino.
+      const reservation = await db.execute(sql`INSERT INTO telegram_sent_offers (product_id, chat_id, title, affiliate_url) VALUES (${productId}, ${chatId}, ${title || 'Oferta Shopee'}, ${affiliateUrl || ''}) ON CONFLICT DO NOTHING`)
+      if (!reservation.rowCount) {
+        results.push({ chatId, success: false, method: 'skipped', error: 'Oferta já enviada anteriormente neste grupo nas últimas 24 horas' })
+        continue
+      }
       try {
         let endpoint = imageUrl ? `${base}/sendPhoto` : `${base}/sendMessage`
         let body = imageUrl
