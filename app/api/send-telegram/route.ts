@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { sql } from 'drizzle-orm'
 import { db } from '@/lib/db'
 
+const normalizeTitle = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '')
 
 export async function POST(request: Request) {
   try {
@@ -12,7 +13,6 @@ export async function POST(request: Request) {
     if (!caption?.trim()) return NextResponse.json({ error: 'A oferta não possui texto.' }, { status: 400 })
     if (!productId) return NextResponse.json({ error: 'Identificador do produto ausente.' }, { status: 400 })
 
-        // O bloqueio é verificado por produto + grupo, permitindo enviar a mesma oferta a outro grupo.
 
     // Sempre inclui o grupo padrão do ambiente e soma os grupos enviados pelo painel.
     // Antes, quando chatIds existia, ele substituía TELEGRAM_CHAT_ID e apenas um destino recebia a oferta.
@@ -20,25 +20,17 @@ export async function POST(request: Request) {
     const destinationIds = [...new Set(requestedIds.map((id) => String(id ?? '').trim()).filter(Boolean))]
     if (!destinationIds.length) return NextResponse.json({ error: 'Configure TELEGRAM_CHAT_ID ou adicione IDs de grupos nas configurações.' }, { status: 503 })
 
+    const titleRows = await db.execute(sql`SELECT title FROM telegram_sent_offers WHERE sent_at >= NOW() - INTERVAL '7 days'`)
+    const normalizedIncomingTitle = normalizeTitle(title || '')
+    const alreadyPublished = titleRows.rows.some((row) => normalizeTitle(String(row.title || '')) === normalizedIncomingTitle)
+    if (alreadyPublished) return NextResponse.json({ error: 'Oferta já publicada anteriormente. Publicação bloqueada automaticamente.', code: 'DUPLICATE_TITLE' }, { status: 409 })
+
     const results: { chatId: string; success: boolean; method: string; error?: string }[] = []
     const base = `https://api.telegram.org/bot${token}`
 
     for (const chatId of destinationIds) {
-      // Grupo 1 libera novamente após 24 horas; o Grupo 2 fica bloqueado por 7 dias.
-      // O prazo é aplicado por produto + grupo, sem impedir que a mesma oferta seja enviada a outro grupo.
-      const cooldown = chatId === defaultChatId ? '24 hours' : '7 days'
-      const recent = await db.execute(sql`SELECT 1 FROM telegram_sent_offers WHERE product_id = ${productId} AND chat_id = ${chatId} AND sent_at >= NOW() - ${cooldown}::interval LIMIT 1`)
-      if (recent.rowCount) {
-        results.push({ chatId, success: false, method: 'skipped', error: 'Oferta já enviada anteriormente neste grupo dentro do prazo de bloqueio' })
-        continue
-      }
-      // Reserva atômica: impede duas solicitações simultâneas de publicarem a mesma oferta no mesmo grupo.
-      // Se já existir um registro protegido pelo índice do banco, apenas ignora este destino.
-      const reservation = await db.execute(sql`INSERT INTO telegram_sent_offers (product_id, chat_id, title, affiliate_url) VALUES (${productId}, ${chatId}, ${title || 'Oferta Shopee'}, ${affiliateUrl || ''}) ON CONFLICT DO NOTHING`)
-      if (!reservation.rowCount) {
-        results.push({ chatId, success: false, method: 'skipped', error: 'Oferta já enviada anteriormente neste grupo dentro do prazo de bloqueio' })
-        continue
-      }
+      await db.execute(sql`DELETE FROM telegram_sent_offers WHERE sent_at < NOW() - CASE WHEN chat_id = ${defaultChatId} THEN INTERVAL '24 hours' ELSE INTERVAL '7 days' END`)
+      await db.execute(sql`INSERT INTO telegram_sent_offers (product_id, chat_id, title, affiliate_url) VALUES (${productId}, ${chatId}, ${title || 'Oferta Shopee'}, ${affiliateUrl || ''})`)
       try {
         let endpoint = imageUrl ? `${base}/sendPhoto` : `${base}/sendMessage`
         let body = imageUrl
@@ -86,18 +78,21 @@ export async function POST(request: Request) {
   }
 }
 
+export async function DELETE() {
+  try { await db.execute(sql`DELETE FROM telegram_sent_offers`); return NextResponse.json({ ok: true }) } catch { return NextResponse.json({ error: 'Não foi possível limpar os históricos.' }, { status: 500 }) }
+}
+
 export async function GET() {
   try {
     // O painel mostra somente as publicações de hoje para facilitar o controle diário.
     // A consulta de bloqueio acima continua usando uma janela móvel de 24 horas por grupo.
-    const result = await db.execute(sql`SELECT product_id, title, chat_id, sent_at FROM telegram_sent_offers WHERE sent_at >= NOW() - INTERVAL '24 hours' ORDER BY sent_at DESC`)
-    const weekResult = await db.execute(sql`SELECT product_id, title, chat_id, sent_at FROM telegram_sent_offers WHERE sent_at >= NOW() - INTERVAL '7 days' ORDER BY sent_at DESC`)
+    await db.execute(sql`DELETE FROM telegram_sent_offers WHERE sent_at < NOW() - CASE WHEN chat_id = ${process.env.TELEGRAM_CHAT_ID} THEN INTERVAL '24 hours' ELSE INTERVAL '7 days' END`)
+    const result = await db.execute(sql`SELECT product_id, title, chat_id, affiliate_url, sent_at FROM telegram_sent_offers WHERE sent_at >= NOW() - INTERVAL '24 hours' ORDER BY sent_at DESC`)
+    const weekResult = await db.execute(sql`SELECT product_id, title, chat_id, affiliate_url, sent_at FROM telegram_sent_offers WHERE sent_at >= NOW() - INTERVAL '7 days' ORDER BY sent_at DESC`)
     // O produto só volta a ficar disponível após o maior prazo configurado (7 dias).
     // Assim ele não reaparece no painel enquanto ainda estiver bloqueado em nenhum grupo.
-    const blocked = await db.execute(sql`SELECT DISTINCT product_id FROM telegram_sent_offers WHERE sent_at >= NOW() - INTERVAL '7 days'`)
-    const recent = await db.execute(sql`SELECT DISTINCT product_id FROM telegram_sent_offers WHERE sent_at >= NOW() - INTERVAL '24 hours'`)
     const configuredChatIds = [process.env.TELEGRAM_CHAT_ID].filter(Boolean).map(String)
-    return NextResponse.json({ ok: true, sentProductIds: recent.rows.map((row) => String(row.product_id)), blockedProductIds: blocked.rows.map((row) => String(row.product_id)), history: result.rows, history24h: result.rows, history7d: weekResult.rows, configuredChatIds })
+    return NextResponse.json({ ok: true, sentProductIds: [], blockedProductIds: [], publishedTitles: weekResult.rows.map((row) => String(row.title || '')), history: result.rows, history24h: result.rows, history7d: weekResult.rows, configuredChatIds })
   } catch {
     return NextResponse.json({ ok: false, sentProductIds: [], error: 'Não foi possível consultar o histórico de ofertas.' }, { status: 500 })
   }
