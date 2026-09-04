@@ -20,17 +20,19 @@ export async function POST(request: Request) {
     const destinationIds = [...new Set(requestedIds.map((id) => String(id ?? '').trim()).filter(Boolean))]
     if (!destinationIds.length) return NextResponse.json({ error: 'Configure TELEGRAM_CHAT_ID ou adicione IDs de grupos nas configurações.' }, { status: 503 })
 
-    const titleRows = await db.execute(sql`SELECT title FROM telegram_sent_offers WHERE sent_at >= NOW() - INTERVAL '7 days'`)
     const normalizedIncomingTitle = normalizeTitle(title || '')
-    const alreadyPublished = titleRows.rows.some((row) => normalizeTitle(String(row.title || '')) === normalizedIncomingTitle)
-    if (alreadyPublished) return NextResponse.json({ error: 'Oferta já publicada anteriormente. Publicação bloqueada automaticamente.', code: 'DUPLICATE_TITLE' }, { status: 409 })
-
     const results: { chatId: string; success: boolean; method: string; error?: string }[] = []
     const base = `https://api.telegram.org/bot${token}`
 
     for (const chatId of destinationIds) {
+      const cooldown = chatId === String(defaultChatId || '') ? '24 hours' : '7 days'
       await db.execute(sql`DELETE FROM telegram_sent_offers WHERE sent_at < NOW() - CASE WHEN chat_id = ${defaultChatId} THEN INTERVAL '24 hours' ELSE INTERVAL '7 days' END`)
-      await db.execute(sql`INSERT INTO telegram_sent_offers (product_id, chat_id, title, affiliate_url) VALUES (${productId}, ${chatId}, ${title || 'Oferta Shopee'}, ${affiliateUrl || ''})`)
+      const titleRows = await db.execute(sql`SELECT title FROM telegram_sent_offers WHERE chat_id = ${chatId} AND sent_at >= NOW() - ${cooldown}::interval`)
+      const duplicateInThisGroup = titleRows.rows.some((row) => normalizeTitle(String(row.title || '')) === normalizedIncomingTitle)
+      if (duplicateInThisGroup) {
+        results.push({ chatId, success: false, method: 'skipped', error: 'Oferta já publicada anteriormente. Publicação bloqueada automaticamente.' })
+        continue
+      }
       try {
         let endpoint = imageUrl ? `${base}/sendPhoto` : `${base}/sendMessage`
         let body = imageUrl
@@ -72,7 +74,7 @@ export async function POST(request: Request) {
         ? `✓ Oferta enviada para ${totalCount} destino(s).`
         : `⚠ Enviada para ${successCount}/${totalCount} destino(s). ${results.filter(r => !r.success).map(r => r.error).join('; ')}`)
 
-    return NextResponse.json({ ok: allSucceeded, summary, results })
+    return NextResponse.json({ ok: allSucceeded, summary, results, sentChatIds: results.filter((result) => result.success).map((result) => result.chatId) })
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : 'Falha ao enviar para o Telegram.' }, { status: 500 })
   }
