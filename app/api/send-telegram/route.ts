@@ -33,6 +33,8 @@ export async function POST(request: Request) {
         results.push({ chatId, success: false, method: 'skipped', error: 'Oferta já publicada anteriormente. Publicação bloqueada automaticamente.' })
         continue
       }
+      // Reserva o título antes do envio para impedir cliques simultâneos e repetir no mesmo grupo.
+      await db.execute(sql`INSERT INTO telegram_sent_offers (product_id, chat_id, title, affiliate_url) VALUES (${productId}, ${chatId}, ${title || 'Oferta Shopee'}, ${affiliateUrl || ''})`)
       try {
         let endpoint = imageUrl ? `${base}/sendPhoto` : `${base}/sendMessage`
         let body = imageUrl
