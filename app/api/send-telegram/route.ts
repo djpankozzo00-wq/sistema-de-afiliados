@@ -26,7 +26,7 @@ export async function POST(request: Request) {
 
     for (const chatId of destinationIds) {
       const cooldown = chatId === String(defaultChatId || '') ? '24 hours' : '7 days'
-      await db.execute(sql`DELETE FROM telegram_sent_offers WHERE sent_at < NOW() - CASE WHEN chat_id = ${defaultChatId} THEN INTERVAL '24 hours' ELSE INTERVAL '7 days' END`)
+      await db.execute(sql`DELETE FROM telegram_sent_offers WHERE (chat_id = ${defaultChatId} AND sent_at < NOW() - INTERVAL '24 hours') OR (chat_id <> ${defaultChatId} AND sent_at < NOW() - INTERVAL '7 days')`)
       const titleRows = await db.execute(sql`SELECT title FROM telegram_sent_offers WHERE chat_id = ${chatId} AND sent_at >= NOW() - ${cooldown}::interval`)
       const duplicateInThisGroup = titleRows.rows.some((row) => normalizeTitle(String(row.title || '')) === normalizedIncomingTitle)
       if (duplicateInThisGroup) {
@@ -85,8 +85,8 @@ export async function POST(request: Request) {
 export async function DELETE(request: Request) {
   try {
     const scope = new URL(request.url).searchParams.get('scope')
-    if (scope === '24h') await db.execute(sql`DELETE FROM telegram_sent_offers WHERE sent_at < NOW() - INTERVAL '24 hours' OR chat_id = ${process.env.TELEGRAM_CHAT_ID}`)
-    else if (scope === '7d') await db.execute(sql`DELETE FROM telegram_sent_offers WHERE sent_at < NOW() - INTERVAL '7 days' OR chat_id <> ${process.env.TELEGRAM_CHAT_ID}`)
+    if (scope === '24h') await db.execute(sql`DELETE FROM telegram_sent_offers WHERE chat_id = ${process.env.TELEGRAM_CHAT_ID} AND sent_at < NOW() - INTERVAL '24 hours'`)
+    else if (scope === '7d') await db.execute(sql`DELETE FROM telegram_sent_offers WHERE chat_id <> ${process.env.TELEGRAM_CHAT_ID} AND sent_at < NOW() - INTERVAL '7 days'`)
     else await db.execute(sql`DELETE FROM telegram_sent_offers`)
     return NextResponse.json({ ok: true, scope })
   } catch { return NextResponse.json({ error: 'Não foi possível limpar o histórico.' }, { status: 500 }) }
