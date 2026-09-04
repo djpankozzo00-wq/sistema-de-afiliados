@@ -82,8 +82,14 @@ export async function POST(request: Request) {
   }
 }
 
-export async function DELETE() {
-  try { await db.execute(sql`DELETE FROM telegram_sent_offers`); return NextResponse.json({ ok: true }) } catch { return NextResponse.json({ error: 'Não foi possível limpar os históricos.' }, { status: 500 }) }
+export async function DELETE(request: Request) {
+  try {
+    const scope = new URL(request.url).searchParams.get('scope')
+    if (scope === '24h') await db.execute(sql`DELETE FROM telegram_sent_offers WHERE sent_at < NOW() - INTERVAL '24 hours' OR chat_id = ${process.env.TELEGRAM_CHAT_ID}`)
+    else if (scope === '7d') await db.execute(sql`DELETE FROM telegram_sent_offers WHERE sent_at < NOW() - INTERVAL '7 days' OR chat_id <> ${process.env.TELEGRAM_CHAT_ID}`)
+    else await db.execute(sql`DELETE FROM telegram_sent_offers`)
+    return NextResponse.json({ ok: true, scope })
+  } catch { return NextResponse.json({ error: 'Não foi possível limpar o histórico.' }, { status: 500 }) }
 }
 
 export async function GET() {
