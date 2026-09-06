@@ -78,7 +78,9 @@ export function AdminDashboard() {
       setReleasedIds(sent)
       const configured = Array.isArray(data.configuredChatIds) ? data.configuredChatIds.map(String) : []
       const savedIds = getTelegramChatIds(JSON.parse(window.localStorage.getItem('shopee-affiliate-credentials') || '{}').telegramChatIds || '') || []
-      setTelegramDestinations([...new Set([...savedIds, ...configured])])
+      const primaryGroupId = String(configured[0] || savedIds[0] || '')
+      const secondaryGroupIds = savedIds.filter((id) => id !== primaryGroupId && !configured.includes(id))
+      setTelegramDestinations([primaryGroupId, ...secondaryGroupIds])
       setSeenIds((ids) => [...new Set(ids.filter((id) => !fallbackProducts.some((product) => product.id === id)).concat(sent))])
       setProducts((current) => current)
     }).catch(() => undefined)
