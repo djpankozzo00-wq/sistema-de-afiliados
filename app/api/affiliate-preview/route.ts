@@ -12,13 +12,14 @@ export async function POST(request: Request) {
     const response = await fetch(parsed.toString(), { headers: { 'User-Agent': 'Mozilla/5.0' }, redirect: 'follow', signal: AbortSignal.timeout(10000) })
     if (!response.ok) throw new Error('Não foi possível acessar o link')
     const html = await response.text()
-    const getMeta = (property: string) => { const match = html.match(new RegExp(`<meta[^>]+(?:property|name)=["']${property}["'][^>]+content=["']([^"']*)["']`, 'i')) || html.match(new RegExp(`<meta[^>]+content=["']([^"']*)["'][^>]+(?:property|name)=["']${property}["']`, 'i')); return match ? match[1].replace(/&amp;/g, '&').replace(/&quot;/g, '"') : '' }
+    const decode = (value: string) => value.replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    const getMeta = (property: string) => { const escaped = property.replace(':', '\\:'); const match = html.match(new RegExp(`<meta[^>]+(?:property|name)=["']${escaped}["'][^>]+content=["']([^"']*)["']`, 'i')) || html.match(new RegExp(`<meta[^>]+content=["']([^"']*)["'][^>]+(?:property|name)=["']${escaped}["']`, 'i')); return match ? decode(match[1]) : '' }
     const title = clean(getMeta('og:title') || (html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] || '') || 'Oferta por link')
     const description = clean(getMeta('og:description') || getMeta('description') || 'Confira esta oferta especial.')
     const jsonLdBlocks = [...html.matchAll(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)].flatMap((match) => { try { const value = JSON.parse(match[1].trim()); return Array.isArray(value) ? value : [value] } catch { return [] } })
     const offer = jsonLdBlocks.map((value) => value?.offers).find((value) => value && !Array.isArray(value)) || jsonLdBlocks.find((value) => value?.price || value?.offers?.price)?.offers || {}
-    const imageCandidate = getMeta('og:image') || getMeta('twitter:image') || jsonLdBlocks.flatMap((value) => Array.isArray(value?.image) ? value.image : [value?.image]).find(Boolean) || ''
-    const htmlImage = html.match(/<img[^>]+(?:src|data-src)=["']([^"']+)["']/i)?.[1] || html.match(/https?:\\?\/[^"'\\s]+\.(?:jpg|jpeg|png|webp)/i)?.[0] || ''
+    const imageCandidate = getMeta('og:image') || getMeta('twitter:image') || jsonLdBlocks.flatMap((value) => { const image = value?.image; return Array.isArray(image) ? image : [typeof image === 'object' ? image?.url : image] }).find(Boolean) || ''
+    const htmlImage = html.match(/<(?:img|meta)[^>]+(?:src|data-src|content)=["']([^"']+)["']/i)?.[1] || html.match(/https?:\\?\/[^"'\\s]+\.(?:jpg|jpeg|png|webp)(?:\?[^"'\\s]*)?/i)?.[0] || ''
     const imageUrl = absoluteUrl(String(imageCandidate || htmlImage), response.url || affiliateUrl)
     const getNumber = (value: unknown) => { const text = String(value ?? '').replace(/[^0-9,.-]/g, '').replace(/\.(?=[0-9]{3}(?:\D|$))/g, '').replace(',', '.'); const parsed = Number(text); return Number.isFinite(parsed) && parsed > 0 ? parsed : 0 }
     const getNumberMeta = (keys: string[]) => keys.map((key) => getNumber(getMeta(key))).find((value) => value > 0) || 0
