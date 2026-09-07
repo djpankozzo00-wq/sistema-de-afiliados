@@ -20,21 +20,23 @@ export async function POST(request: Request) {
     const destinationIds = [...new Set(requestedIds.map((id) => String(id ?? '').trim()).filter(Boolean))]
     if (!destinationIds.length) return NextResponse.json({ error: 'Configure TELEGRAM_CHAT_ID ou adicione IDs de grupos nas configurações.' }, { status: 503 })
 
+    const isAffiliateLinkOffer = String(productId).startsWith('affiliate-')
     const normalizedIncomingTitle = normalizeTitle(title || '')
     const results: { chatId: string; success: boolean; method: string; error?: string }[] = []
     const base = `https://api.telegram.org/bot${token}`
 
     for (const chatId of destinationIds) {
-      const cooldown = chatId === String(defaultChatId || '') ? '24 hours' : '7 days'
-      await db.execute(sql`DELETE FROM telegram_sent_offers WHERE (chat_id = ${defaultChatId} AND sent_at < NOW() - INTERVAL '24 hours') OR (chat_id <> ${defaultChatId} AND sent_at < NOW() - INTERVAL '7 days')`)
-      const titleRows = await db.execute(sql`SELECT title FROM telegram_sent_offers WHERE chat_id = ${chatId} AND sent_at >= NOW() - ${cooldown}::interval`)
-      const duplicateInThisGroup = titleRows.rows.some((row) => normalizeTitle(String(row.title || '')) === normalizedIncomingTitle)
-      if (duplicateInThisGroup) {
-        results.push({ chatId, success: false, method: 'skipped', error: 'Oferta já publicada anteriormente. Publicação bloqueada automaticamente.' })
-        continue
+      if (!isAffiliateLinkOffer) {
+        const cooldown = chatId === String(defaultChatId || '') ? '24 hours' : '7 days'
+        await db.execute(sql`DELETE FROM telegram_sent_offers WHERE (chat_id = ${defaultChatId} AND sent_at < NOW() - INTERVAL '24 hours') OR (chat_id <> ${defaultChatId} AND sent_at < NOW() - INTERVAL '7 days')`)
+        const titleRows = await db.execute(sql`SELECT title FROM telegram_sent_offers WHERE chat_id = ${chatId} AND sent_at >= NOW() - ${cooldown}::interval`)
+        const duplicateInThisGroup = titleRows.rows.some((row) => normalizeTitle(String(row.title || '')) === normalizedIncomingTitle)
+        if (duplicateInThisGroup) {
+          results.push({ chatId, success: false, method: 'skipped', error: 'Oferta já publicada anteriormente. Publicação bloqueada automaticamente.' })
+          continue
+        }
+        await db.execute(sql`INSERT INTO telegram_sent_offers (product_id, chat_id, title, affiliate_url) VALUES (${productId}, ${chatId}, ${title || 'Oferta Shopee'}, ${affiliateUrl || ''})`)
       }
-      // Reserva o título antes do envio para impedir cliques simultâneos e repetir no mesmo grupo.
-      await db.execute(sql`INSERT INTO telegram_sent_offers (product_id, chat_id, title, affiliate_url) VALUES (${productId}, ${chatId}, ${title || 'Oferta Shopee'}, ${affiliateUrl || ''})`)
       try {
         let endpoint = imageUrl ? `${base}/sendPhoto` : `${base}/sendMessage`
         let body = imageUrl
