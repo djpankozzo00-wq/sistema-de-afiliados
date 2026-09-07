@@ -15,10 +15,15 @@ export async function POST(request: Request) {
     const getMeta = (property: string) => { const match = html.match(new RegExp(`<meta[^>]+(?:property|name)=["']${property}["'][^>]+content=["']([^"']*)["']`, 'i')) || html.match(new RegExp(`<meta[^>]+content=["']([^"']*)["'][^>]+(?:property|name)=["']${property}["']`, 'i')); return match ? match[1].replace(/&amp;/g, '&').replace(/&quot;/g, '"') : '' }
     const title = clean(getMeta('og:title') || (html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] || '') || 'Oferta por link')
     const description = clean(getMeta('og:description') || getMeta('description') || 'Confira esta oferta especial.')
-    const imageUrl = absoluteUrl(getMeta('og:image'), response.url || affiliateUrl)
-    const getNumberMeta = (keys: string[]) => { for (const key of keys) { const value = getMeta(key).replace(/[^0-9,.-]/g, '').replace(/\.(?=[0-9]{3}(?:\D|$))/g, '').replace(',', '.'); const parsed = Number(value); if (Number.isFinite(parsed) && parsed > 0) return parsed } return 0 }
-    const dealPrice = getNumberMeta(['product:price:amount', 'og:price:amount', 'price'])
-    const originalPrice = getNumberMeta(['product:original_price:amount', 'og:original_price:amount', 'original_price']) || dealPrice
+    const jsonLdBlocks = [...html.matchAll(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)].flatMap((match) => { try { const value = JSON.parse(match[1].trim()); return Array.isArray(value) ? value : [value] } catch { return [] } })
+    const offer = jsonLdBlocks.map((value) => value?.offers).find((value) => value && !Array.isArray(value)) || jsonLdBlocks.find((value) => value?.price || value?.offers?.price)?.offers || {}
+    const imageCandidate = getMeta('og:image') || getMeta('twitter:image') || jsonLdBlocks.flatMap((value) => Array.isArray(value?.image) ? value.image : [value?.image]).find(Boolean) || ''
+    const htmlImage = html.match(/<img[^>]+(?:src|data-src)=["']([^"']+)["']/i)?.[1] || html.match(/https?:\\?\/[^"'\\s]+\.(?:jpg|jpeg|png|webp)/i)?.[0] || ''
+    const imageUrl = absoluteUrl(String(imageCandidate || htmlImage), response.url || affiliateUrl)
+    const getNumber = (value: unknown) => { const text = String(value ?? '').replace(/[^0-9,.-]/g, '').replace(/\.(?=[0-9]{3}(?:\D|$))/g, '').replace(',', '.'); const parsed = Number(text); return Number.isFinite(parsed) && parsed > 0 ? parsed : 0 }
+    const getNumberMeta = (keys: string[]) => keys.map((key) => getNumber(getMeta(key))).find((value) => value > 0) || 0
+    const dealPrice = getNumber(offer?.price) || getNumberMeta(['product:price:amount', 'og:price:amount', 'price']) || getNumber((html.match(/(?:R\$|BRL)\s*([0-9]{1,6}(?:[.,][0-9]{2})?)/i) || [])[1])
+    const originalPrice = getNumber(offer?.highPrice) || getNumberMeta(['product:original_price:amount', 'og:original_price:amount', 'original_price']) || dealPrice
     const discount = originalPrice > dealPrice && dealPrice > 0 ? Math.round((1 - dealPrice / originalPrice) * 100) : 0
     const struck = (value: string) => value.split('').map((character) => `${character}\u0336`).join('')
     const productEmoji = /fone|áudio|headset|caixa de som/i.test(title) ? '🎧' : /tênis|sapato|sandália|chinelo/i.test(title) ? '👟' : /cozinha|panela|organizador|casa/i.test(title) ? '🏠' : /beleza|maquiagem|perfume|skincare/i.test(title) ? '✨' : /celular|eletrônico|smart|cabo|carregador/i.test(title) ? '📱' : '🛍️'
