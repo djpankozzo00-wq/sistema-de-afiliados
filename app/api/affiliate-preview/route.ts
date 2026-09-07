@@ -25,12 +25,14 @@ export async function POST(request: Request) {
     const dealPrice = getNumber(offer?.price) || getNumberMeta(['product:price:amount', 'og:price:amount', 'price']) || getNumber((html.match(/(?:R\$|BRL)\s*([0-9]{1,6}(?:[.,][0-9]{2})?)/i) || [])[1])
     const originalPrice = getNumber(offer?.highPrice) || getNumberMeta(['product:original_price:amount', 'og:original_price:amount', 'original_price']) || dealPrice
     const discount = originalPrice > dealPrice && dealPrice > 0 ? Math.round((1 - dealPrice / originalPrice) * 100) : 0
+    const rating = getNumber(offer?.ratingValue) || getNumberMeta(['product:rating', 'rating', 'og:rating'])
+    const stock = getNumber(offer?.inventoryLevel) || getNumberMeta(['product:availability', 'availability'])
     const struck = (value: string) => value.split('').map((character) => `${character}\u0336`).join('')
     const productEmoji = /fone|áudio|headset|caixa de som/i.test(title) ? '🎧' : /tênis|sapato|sandália|chinelo/i.test(title) ? '👟' : /cozinha|panela|organizador|casa/i.test(title) ? '🏠' : /beleza|maquiagem|perfume|skincare/i.test(title) ? '✨' : /celular|eletrônico|smart|cabo|carregador/i.test(title) ? '📱' : '🛍️'
     const formattedPrice = dealPrice.toFixed(2).replace('.', ',')
     const formattedOriginal = originalPrice.toFixed(2).replace('.', ',')
     const caption = `🔥 OFERTA RELÂMPAGO 🔥\n\n${productEmoji} ${title}\n\n💰 Por apenas R$ ${formattedPrice}!\n${discount > 0 ? `🏷️ De ${struck(`R$ ${formattedOriginal}`)} por R$ ${formattedPrice} — ${discount}% OFF` : ''}\n⭐ Achadinho com preço especial\n\n🚀 Confira antes que acabe:\n${affiliateUrl}`
-    const product = { id: `affiliate-${Date.now()}`, title, imageUrl, originalPrice, dealPrice, rating: 0, stock: 1, affiliateUrl, caption }
+    const product = { id: `affiliate-${Date.now()}`, title, imageUrl, originalPrice, dealPrice, rating: rating || 0, stock: stock || 1, affiliateUrl, caption }
     return NextResponse.json({ product })
   } catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : 'Não foi possível preparar a oferta.' }, { status: 400 }) }
 }
