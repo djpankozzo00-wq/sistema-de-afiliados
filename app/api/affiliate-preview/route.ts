@@ -31,7 +31,8 @@ export async function POST(request: Request) {
     const html = await response.text()
     const decode = (value: string) => value.replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>')
     const getMeta = (property: string) => { const escaped = property.replace(':', '\\:'); const match = html.match(new RegExp(`<meta[^>]+(?:property|name)=["']${escaped}["'][^>]+content=["']([^"']*)["']`, 'i')) || html.match(new RegExp(`<meta[^>]+content=["']([^"']*)["'][^>]+(?:property|name)=["']${escaped}["']`, 'i')); return match ? decode(match[1]) : '' }
-    const title = clean(getMeta('og:title') || (html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] || '') || 'Oferta por link')
+    const extractedTitle = clean(getMeta('og:title') || (html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] || ''))
+    const title = extractedTitle || 'Oferta por link'
     const description = clean(getMeta('og:description') || getMeta('description') || 'Confira esta oferta especial.')
     const jsonLdBlocks = [...html.matchAll(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)].flatMap((match) => { try { const value = JSON.parse(match[1].trim()); return Array.isArray(value) ? value : [value] } catch { return [] } })
     const offer = jsonLdBlocks.map((value) => value?.offers).find((value) => value && !Array.isArray(value)) || jsonLdBlocks.find((value) => value?.price || value?.offers?.price)?.offers || {}
@@ -50,6 +51,9 @@ export async function POST(request: Request) {
     const formattedPrice = dealPrice.toFixed(2).replace('.', ',')
     const formattedOriginal = originalPrice.toFixed(2).replace('.', ',')
     const caption = `⚡ OFERTA RELÂMPAGO ⚡\n\n${productEmoji} ${title} por apenas R$ ${formattedPrice}!\n${discount > 0 ? `💰 De ${struck(`R$ ${formattedOriginal}`)} por R$ ${formattedPrice} — ${discount}% OFF` : ''}\n✨ ${description}\n\n🛒 Confira aqui: ${affiliateUrl}`
+    if (title === 'Oferta por link' || !imageUrl || dealPrice <= 0) {
+      throw new Error('A Shopee não retornou foto, título e preço deste link. Verifique o App ID e a Secret Key da API de Afiliados.')
+    }
     const product = { id: `affiliate-${Date.now()}`, title, imageUrl, originalPrice, dealPrice, rating: rating || 0, stock: stock || 1, affiliateUrl, caption }
     return NextResponse.json({ product })
   } catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : 'Não foi possível preparar a oferta.' }, { status: 400 }) }
