@@ -34,8 +34,8 @@ export async function POST(request: Request) {
     const refreshKey = Number.isFinite(body.refreshKey) ? Math.max(0, Number(body.refreshKey)) : 0
     const mode = body.mode || 'all'
     const keyword = typeof body.keyword === 'string' ? body.keyword.trim().slice(0, 100) : ''
-    const requestedLimit = Math.min(50, Math.max(5, Number(body.limit) || 5))
-    const page = (refreshKey % 20) + 1
+    const requestedLimit = Math.max(5, Number(body.limit) || 50)
+    const page = refreshKey + 1
     const sortType = mode === 'commission-high' ? 4 : mode === 'commission-low' ? 5 : mode === 'best-selling' ? 2 : mode === 'week' || mode === 'month' ? 2 : 1
     const listType = mode === 'week' || mode === 'month' ? 1 : 2
     const secretKey = !credentials.secretKey || credentials.secretKey === 'process.env.API_KEY' ? process.env.API_KEY || '' : credentials.secretKey
