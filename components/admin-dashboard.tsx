@@ -49,6 +49,16 @@ export function AdminDashboard() {
   const [minCommission, setMinCommission] = useState('')
   const [minRating, setMinRating] = useState('')
   const initialFetchDone = useRef(false)
+  const syncHydrated = useRef(false)
+  const sharedState = { products, hiddenUntil, credentials, releasedIds, blockedIds, publishedTitles, sentHistory, offerHistory, history24h, history7d, failedIds, telegramDestinations, autoRefresh, floatingMenuOpen, dragPosition, query, refreshKey, seenIds, countdown, searchMode, searchKeyword, searchLimit, minPrice, maxPrice, minCommission, minRating }
+
+  useEffect(() => { let active = true; const applySharedState = (state: Partial<typeof sharedState>) => { if (!active || !state || Object.keys(state).length === 0) return; if (state.products) setProducts(state.products); if (state.hiddenUntil) setHiddenUntil(state.hiddenUntil); if (state.credentials) setCredentials(state.credentials); if (state.releasedIds) setReleasedIds(state.releasedIds); if (state.blockedIds) setBlockedIds(state.blockedIds); if (state.publishedTitles) setPublishedTitles(state.publishedTitles); if (state.sentHistory) setSentHistory(state.sentHistory); if (state.offerHistory) setOfferHistory(state.offerHistory); if (state.history24h) setHistory24h(state.history24h); if (state.history7d) setHistory7d(state.history7d); if (state.failedIds) setFailedIds(state.failedIds); if (state.telegramDestinations) setTelegramDestinations(state.telegramDestinations); if (typeof state.autoRefresh === 'boolean') setAutoRefresh(state.autoRefresh); if (typeof state.floatingMenuOpen === 'boolean') setFloatingMenuOpen(state.floatingMenuOpen); if (state.dragPosition) setDragPosition(state.dragPosition); setNotice('Painel sincronizado entre os aparelhos.') }
+    fetch('/api/dashboard-state').then((response) => response.json()).then((data) => { applySharedState(data.state); syncHydrated.current = true }).catch(() => { syncHydrated.current = true })
+    const timer = window.setInterval(() => fetch('/api/dashboard-state').then((response) => response.json()).then((data) => applySharedState(data.state)).catch(() => undefined), 3000)
+    return () => { active = false; window.clearInterval(timer) }
+  }, [])
+
+  useEffect(() => { if (!syncHydrated.current) return; const timer = window.setTimeout(() => { fetch('/api/dashboard-state', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ state: sharedState }) }).catch(() => undefined) }, 500); return () => window.clearTimeout(timer) }, [JSON.stringify(sharedState)])
 
   useEffect(() => { if (!notice) return; const timer = window.setTimeout(() => setNotice(''), 10000); return () => window.clearTimeout(timer) }, [notice])
   const startDragging = (event: React.PointerEvent<HTMLDivElement>) => { const rect = event.currentTarget.getBoundingClientRect(); dragRef.current = { offsetX: event.clientX - rect.left, offsetY: event.clientY - rect.top }; event.currentTarget.setPointerCapture(event.pointerId) }
