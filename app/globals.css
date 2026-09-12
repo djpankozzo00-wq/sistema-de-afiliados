@@ -116,6 +116,9 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+textarea[readonly] { overflow: hidden !important; scrollbar-width: none; }
+textarea[readonly]::-webkit-scrollbar { display: none; }
+
 @media (prefers-color-scheme: dark) {
   :root:not(.light) {
     color-scheme: dark;
