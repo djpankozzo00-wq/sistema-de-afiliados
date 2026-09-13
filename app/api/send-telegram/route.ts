@@ -6,7 +6,7 @@ const normalizeTitle = (value: string) => value.normalize('NFD').replace(/[\u030
 
 export async function POST(request: Request) {
   try {
-    const { caption, imageUrl, productId, title, affiliateUrl, chatIds, targetChatIds } = await request.json() as { caption?: string; imageUrl?: string; productId?: string; title?: string; affiliateUrl?: string; chatIds?: string[]; targetChatIds?: string[] }
+    const { caption, imageUrl, productId, title, affiliateUrl, chatIds, targetChatIds, forceLink } = await request.json() as { caption?: string; imageUrl?: string; productId?: string; title?: string; affiliateUrl?: string; chatIds?: string[]; targetChatIds?: string[]; forceLink?: boolean }
     const token = process.env.TELEGRAM_BOT_TOKEN
     const defaultChatId = process.env.TELEGRAM_CHAT_ID
     if (!token) return NextResponse.json({ error: 'Configure TELEGRAM_BOT_TOKEN.' }, { status: 503 })
@@ -20,7 +20,7 @@ export async function POST(request: Request) {
     const destinationIds = [...new Set(requestedIds.map((id) => String(id ?? '').trim()).filter(Boolean))]
     if (!destinationIds.length) return NextResponse.json({ error: 'Configure TELEGRAM_CHAT_ID ou adicione IDs de grupos nas configurações.' }, { status: 503 })
 
-    const isAffiliateLinkOffer = String(productId).startsWith('affiliate-')
+    const isAffiliateLinkOffer = forceLink === true || String(productId).startsWith('affiliate-')
     const normalizedIncomingTitle = normalizeTitle(title || '')
     const results: { chatId: string; success: boolean; method: string; error?: string }[] = []
     const base = `https://api.telegram.org/bot${token}`
