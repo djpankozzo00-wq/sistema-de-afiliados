@@ -67,24 +67,8 @@ export function AdminDashboard() {
       setCredentials({ ...emptyCredentials, ...parsed, telegramChatIds: parsed.telegramChatIds?.trim() || emptyCredentials.telegramChatIds })
     }
     setApiEnabled(enabled)
-    fetch('/api/send-telegram').then((response) => response.json()).then((data) => {
-      const sent = Array.isArray(data.sentProductIds) ? data.sentProductIds.map(String) : []
-      const blocked = Array.isArray(data.blockedProductIds) ? data.blockedProductIds.map(String) : sent
-      setBlockedIds(blocked)
-      setPublishedTitles(Array.isArray(data.publishedTitles) ? data.publishedTitles.map((title: string) => normalizeTitle(title)) : [])
-      const mapHistory = (items: unknown[]) => items.map((item) => { const row = item as { product_id?: string; title?: string; chat_id?: string; sent_at?: string }; return { productId: String(row.product_id), title: row.title || 'Oferta Shopee', chatId: row.chat_id, sentAt: row.sent_at } })
-      setHistory24h(Array.isArray(data.history24h) ? mapHistory(data.history24h) : [])
-      setHistory7d(Array.isArray(data.history7d) ? mapHistory(data.history7d) : [])
-      setSentHistory(Array.isArray(data.history) ? mapHistory(data.history) : [])
-      setReleasedIds(sent)
-      const configured = Array.isArray(data.configuredChatIds) ? data.configuredChatIds.map(String) : []
-      const savedIds = getTelegramChatIds(JSON.parse(window.localStorage.getItem('shopee-affiliate-credentials') || '{}').telegramChatIds || '') || []
-      const primaryGroupId = String(configured[0] || savedIds[0] || '')
-      const secondaryGroupIds = savedIds.filter((id) => id !== primaryGroupId && !configured.includes(id))
-      setTelegramDestinations([primaryGroupId, ...secondaryGroupIds])
-      setSeenIds((ids) => [...new Set(ids.filter((id) => !fallbackProducts.some((product) => product.id === id)).concat(sent))])
-      setProducts((current) => current)
-    }).catch(() => undefined)
+    const savedIds = getTelegramChatIds(JSON.parse(window.localStorage.getItem('shopee-affiliate-credentials') || '{}').telegramChatIds || '') || []
+    setTelegramDestinations(savedIds)
   }, [])
   useEffect(() => { const restoreExpired = () => { const now = Date.now(); setHiddenUntil((current) => { const active = Object.fromEntries(Object.entries(current).filter(([, until]) => until > now)); if (Object.keys(active).length !== Object.keys(current).length) window.localStorage.setItem('shopee-hidden-offers', JSON.stringify(active)); return active }); }; restoreExpired(); const timer = window.setInterval(restoreExpired, 30000); return () => window.clearInterval(timer) }, [])
   const fetchDeals = useCallback(async (requestedRefreshKey = refreshKey) => {
