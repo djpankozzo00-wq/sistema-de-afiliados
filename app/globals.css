@@ -118,9 +118,15 @@
 }
 
 body { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace; background-image: linear-gradient(rgba(74, 222, 128, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(74, 222, 128, 0.05) 1px, transparent 1px); background-size: 28px 28px; }
-.dark body::before { content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 50; background: linear-gradient(to bottom, transparent 50%, rgba(74, 222, 128, 0.025) 50%); background-size: 100% 4px; opacity: 0.32; mix-blend-mode: screen; }
+.dark body::before { content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 50; background: linear-gradient(to bottom, transparent 50%, rgba(74, 222, 128, 0.04) 50%); background-size: 100% 4px; opacity: 0.4; mix-blend-mode: screen; }
+.matrix-rain { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; opacity: 0.24; mask-image: linear-gradient(to bottom, transparent, black 12%, black 84%, transparent); }
+.matrix-rain span { position: absolute; top: -38rem; white-space: pre; color: oklch(0.78 0.19 145); font: 600 0.9rem/1.45 'JetBrains Mono', monospace; text-shadow: 0 0 8px oklch(0.78 0.19 145 / 0.75); animation: matrix-fall linear infinite; }
+.matrix-rain span:nth-child(3n) { color: oklch(0.68 0.18 160); opacity: 0.7; }
+.matrix-rain span:nth-child(4n) { font-size: 0.72rem; opacity: 0.55; }
+@keyframes matrix-fall { from { transform: translateY(-10vh); } to { transform: translateY(145vh); } }
 .dark header { border-color: oklch(0.78 0.19 145 / 0.28) !important; box-shadow: 0 1px 28px oklch(0.78 0.19 145 / 0.07); }
-.dark main > div { animation: hacker-enter 500ms ease-out both; }
+.dark main > div:not(.matrix-rain) { position: relative; z-index: 1; animation: hacker-enter 500ms ease-out both; }
+.dark main > header, .dark main > section { position: relative; z-index: 1; }
 .dark [class*='rounded-2xl'] { transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease; }
 .dark [class*='rounded-2xl']:hover { border-color: oklch(0.78 0.19 145 / 0.34); box-shadow: 0 0 24px oklch(0.78 0.19 145 / 0.08); }
 @keyframes hacker-enter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
