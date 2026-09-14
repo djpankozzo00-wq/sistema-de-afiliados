@@ -17,7 +17,7 @@ export async function POST(request: Request) {
     // Sempre inclui o grupo padrão do ambiente e soma os grupos enviados pelo painel.
     // Antes, quando chatIds existia, ele substituía TELEGRAM_CHAT_ID e apenas um destino recebia a oferta.
     const requestedIds = Array.isArray(targetChatIds) && targetChatIds.length ? targetChatIds : [defaultChatId, ...(chatIds || [])]
-    const destinationIds = [...new Set(requestedIds.map((id) => String(id ?? '').trim()).filter(Boolean))]
+    const destinationIds = [...new Set(requestedIds.map((id) => String(id ?? '').trim() === 'default' ? String(defaultChatId || '') : String(id ?? '').trim()).filter(Boolean))]
     if (!destinationIds.length) return NextResponse.json({ error: 'Configure TELEGRAM_CHAT_ID ou adicione IDs de grupos nas configurações.' }, { status: 503 })
 
     const isAffiliateLinkOffer = forceLink === true || String(productId).startsWith('affiliate-')
