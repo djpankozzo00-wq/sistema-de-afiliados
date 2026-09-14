@@ -83,20 +83,20 @@
 
 .dark {
   color-scheme: dark;
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  --background: oklch(0.105 0.025 155);
+  --foreground: oklch(0.94 0.035 150);
+  --card: oklch(0.145 0.03 155);
+  --card-foreground: oklch(0.94 0.035 150);
+  --popover: oklch(0.13 0.03 155);
+  --popover-foreground: oklch(0.94 0.035 150);
+  --primary: oklch(0.78 0.19 145);
+  --primary-foreground: oklch(0.10 0.025 155);
+  --secondary: oklch(0.20 0.04 155);
+  --secondary-foreground: oklch(0.90 0.04 150);
+  --muted: oklch(0.19 0.035 155);
+  --muted-foreground: oklch(0.68 0.06 150);
+  --accent: oklch(0.28 0.09 180);
+  --accent-foreground: oklch(0.92 0.05 160);
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
@@ -116,6 +116,10 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+body { background-image: linear-gradient(rgba(74, 222, 128, 0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(74, 222, 128, 0.035) 1px, transparent 1px); background-size: 28px 28px; }
+::selection { background: oklch(0.78 0.19 145 / 0.35); color: oklch(0.98 0.02 150); }
+.dark button:not(:disabled):hover { box-shadow: 0 0 22px oklch(0.78 0.19 145 / 0.16); }
+.dark input:focus, .dark textarea:focus, .dark select:focus { box-shadow: 0 0 0 2px oklch(0.78 0.19 145 / 0.24), 0 0 18px oklch(0.78 0.19 145 / 0.12); }
 textarea[readonly] { overflow: hidden !important; scrollbar-width: none; }
 textarea[readonly]::-webkit-scrollbar { display: none; }
 
