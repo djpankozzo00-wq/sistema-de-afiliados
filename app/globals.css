@@ -119,6 +119,7 @@
 
 html, body { width: 100%; max-width: 100%; overflow-x: hidden; }
 img, video, canvas, svg { max-width: 100%; }
+@media (max-width: 640px) { main section, main article { min-width: 0; max-width: 100%; } main h1, main h2, main h3, main p, main span { max-width: 100%; } }
 body { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace; background-image: linear-gradient(rgba(74, 222, 128, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(74, 222, 128, 0.05) 1px, transparent 1px); background-size: 28px 28px; }
 .dark body::before { content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 50; background: linear-gradient(to bottom, transparent 50%, rgba(74, 222, 128, 0.04) 50%); background-size: 100% 4px; opacity: 0.4; mix-blend-mode: screen; }
 .matrix-rain { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; opacity: 0.24; mask-image: linear-gradient(to bottom, transparent, black 12%, black 84%, transparent); }
