@@ -119,7 +119,22 @@
 
 html, body { width: 100%; max-width: 100%; overflow-x: hidden; }
 img, video, canvas, svg { max-width: 100%; }
-@media (max-width: 640px) { main section, main article { min-width: 0; max-width: 100%; } main h1, main h2, main h3, main p, main span { max-width: 100%; } }
+@media (max-width: 640px) {
+  body { background-color: #020604; font-size: 14px; }
+  main > header { background: rgba(2, 6, 4, 0.94) !important; }
+  main > header > div, main > div { padding-left: 16px !important; padding-right: 16px !important; }
+  main section, main article { min-width: 0; max-width: 100%; }
+  main h1 { font-size: clamp(2rem, 10vw, 3rem); line-height: 0.98; letter-spacing: -0.08em; text-transform: uppercase; }
+  main h2, main h3, main p, main span { max-width: 100%; }
+  main > div > section, main > div > article { border-color: oklch(0.78 0.19 145 / 0.65); background: linear-gradient(135deg, rgba(3, 22, 13, 0.92), rgba(0, 8, 5, 0.88)); box-shadow: 0 0 18px oklch(0.78 0.19 145 / 0.08), inset 0 0 22px rgba(0, 255, 128, 0.025); }
+  main > div > section { border-radius: 24px; }
+  main > div > section > div, main > div > section article { border-radius: 18px; }
+  main > div > section button { border-color: oklch(0.78 0.19 145 / 0.55); color: oklch(0.9 0.12 150); }
+  [class*='fixed bottom'] { left: 16px !important; right: 16px !important; bottom: max(12px, env(safe-area-inset-bottom)) !important; justify-content: center; }
+  .matrix-rain { opacity: 0.32; }
+  .matrix-rain span { font-size: 0.68rem; }
+}
+@media (min-width: 641px) { .matrix-rain { opacity: 0.16; } }
 body { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace; background-image: linear-gradient(rgba(74, 222, 128, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(74, 222, 128, 0.05) 1px, transparent 1px); background-size: 28px 28px; }
 .dark body::before { content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 50; background: linear-gradient(to bottom, transparent 50%, rgba(74, 222, 128, 0.04) 50%); background-size: 100% 4px; opacity: 0.4; mix-blend-mode: screen; }
 .matrix-rain { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; opacity: 0.24; mask-image: linear-gradient(to bottom, transparent, black 12%, black 84%, transparent); }
