@@ -137,8 +137,13 @@ img, video, canvas, svg { max-width: 100%; }
 }
 @media (min-width: 641px) { .matrix-rain { opacity: 0.16; } }
 body { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 1.5px; background-color: #020603; background-image: linear-gradient(rgba(0, 255, 102, 0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 255, 102, 0.045) 1px, transparent 1px), radial-gradient(circle at 50% 0%, rgba(0, 255, 102, 0.08), transparent 42%); background-size: 28px 28px, 28px 28px, 100% 100%; }
-.dark [class*='rounded-2xl'], .dark [class*='rounded-xl'] { border-color: rgba(0, 255, 102, 0.42); background-image: linear-gradient(135deg, rgba(7, 16, 10, 0.88), rgba(2, 6, 3, 0.92)); }
 .dark button { font-family: inherit; letter-spacing: 1px; }
+.hacker-floating-menu button { color: #00FF66 !important; border-color: rgba(0, 255, 102, 0.6) !important; background: #020603 !important; text-shadow: 0 0 8px rgba(0, 255, 102, 0.55); }
+.hacker-floating-menu button:first-child, .hacker-floating-menu button:nth-last-child(2) { color: #001B09 !important; background: #39FF88 !important; }
+.hacker-floating-menu button:disabled { color: #4d8060 !important; }
+.hacker-floating-controls > div:first-child { color: #00FF66 !important; background: #07100A !important; border-color: rgba(0, 255, 102, 0.6) !important; }
+.hacker-notice button { color: #00FF66 !important; }
+.hacker-notice > span:first-child { background: #00FF66 !important; box-shadow: 0 0 10px #00FF66; }
 .dark h1, .dark h2, .dark h3 { font-weight: 700; }
 .dark body::before { content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 50; background: linear-gradient(to bottom, transparent 50%, rgba(74, 222, 128, 0.04) 50%); background-size: 100% 4px; opacity: 0.4; mix-blend-mode: screen; }
 .matrix-rain { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; opacity: 0.24; mask-image: linear-gradient(to bottom, transparent, black 12%, black 84%, transparent); }
