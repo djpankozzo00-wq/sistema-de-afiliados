@@ -8,7 +8,8 @@ export async function POST(request: Request) {
   if (!token || !prices[plan] || ![1, 2, 3].includes(groups)) return NextResponse.json({ error: 'Dados inválidos' }, { status: 400 })
   const link = await pool.query('SELECT id FROM subscription_links WHERE token = $1 AND status = $2 LIMIT 1', [token, 'pending'])
   if (!link.rows[0]) return NextResponse.json({ error: 'Link inválido ou já utilizado' }, { status: 404 })
-  const apiUrl = (process.env.SYNC_PAY_API_URL || 'https://api.syncpayments.com.br').replace(/\/$/, '')
+  const configuredApiUrl = process.env.SYNC_PAY_API_URL?.trim()
+  const apiUrl = configuredApiUrl && /^https?:\/\//i.test(configuredApiUrl) ? configuredApiUrl.replace(/\/$/, '') : 'https://api.syncpayments.com.br'
   const clientId = process.env.SYNC_PAY_CLIENT_ID
   const clientSecret = process.env.SYNC_PAY_CLIENT_SECRET
   if (!clientId || !clientSecret) return NextResponse.json({ error: 'SyncPay não configurada. Cadastre SYNC_PAY_CLIENT_ID e SYNC_PAY_CLIENT_SECRET.' }, { status: 503 })
