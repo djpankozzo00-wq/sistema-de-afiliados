@@ -131,14 +131,14 @@ img, video, canvas, svg { max-width: 100%; }
   main > div > section { border-radius: 24px; }
   main > div > section > div, main > div > section article { border-radius: 18px; }
   main > div > section button { border-color: oklch(0.78 0.19 145 / 0.55); color: oklch(0.9 0.12 150); }
-  .hacker-floating-controls { position: sticky !important; top: 76px !important; bottom: auto !important; z-index: 60 !important; justify-content: center; align-self: flex-start; }
+  .hacker-floating-controls { position: sticky !important; top: auto !important; bottom: 16px !important; z-index: 60 !important; justify-content: center; align-self: flex-start; }
   .hacker-floating-controls.dragged { transform: translate(var(--drag-x, 0), var(--drag-y, 0)); }
   .hacker-notice { position: sticky !important; top: 16px !important; z-index: 61 !important; align-self: flex-start; }
   .matrix-rain { opacity: 0.32; }
   .matrix-rain span { font-size: 0.68rem; }
 }
 @media (min-width: 641px) { .matrix-rain { opacity: 0.16; } }
-.hacker-floating-controls { position: sticky !important; z-index: 60 !important; top: 76px !important; bottom: auto !important; align-self: flex-start; }
+.hacker-floating-controls { position: sticky !important; z-index: 60 !important; top: auto !important; bottom: 16px !important; align-self: flex-start; }
 .hacker-notice { position: sticky !important; z-index: 61 !important; top: 16px !important; align-self: flex-start; }
 @supports not (overflow: clip) { main { overflow-x: hidden; } }
 body { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 1.5px; background-color: #020603; background-image: linear-gradient(rgba(0, 255, 102, 0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 255, 102, 0.045) 1px, transparent 1px), radial-gradient(circle at 50% 0%, rgba(0, 255, 102, 0.08), transparent 42%); background-size: 28px 28px, 28px 28px, 100% 100%; }
@@ -158,6 +158,8 @@ body { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monos
 @keyframes matrix-fall { from { transform: translateY(-10vh); } to { transform: translateY(145vh); } }
 .dark header { border-color: oklch(0.78 0.19 145 / 0.28) !important; box-shadow: 0 1px 28px oklch(0.78 0.19 145 / 0.07); }
 .dark main > div:not(.matrix-rain) { position: relative; z-index: 1; animation: hacker-enter 500ms ease-out both; }
+.dark main > div:not(.matrix-rain) { animation-name: hacker-fade-in; }
+@keyframes hacker-fade-in { from { opacity: 0; } to { opacity: 1; } }
 .dark main > header, .dark main > section { position: relative; z-index: 1; }
 .dark [class*='rounded-2xl'] { transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease; }
 .dark [class*='rounded-2xl']:hover { border-color: oklch(0.78 0.19 145 / 0.34); box-shadow: 0 0 24px oklch(0.78 0.19 145 / 0.08); }
