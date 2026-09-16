@@ -137,10 +137,9 @@ img, video, canvas, svg { max-width: 100%; }
   .notificacao-topo { position: fixed !important; top: 10px !important; left: 16px !important; right: 16px !important; z-index: 9999 !important; opacity: 1; visibility: visible; transition: opacity 0.5s ease, visibility 0.5s ease; width: auto !important; }
 .notificacao-topo.ocultar { opacity: 0; visibility: hidden; }
 .seu-painel-botoes { position: fixed !important; left: 50% !important; right: auto !important; bottom: 12px !important; width: max-content !important; max-width: calc(100vw - 16px) !important; transform: translateX(-50%); z-index: 9999 !important; background: transparent !important; pointer-events: none; }
-.seu-painel-botoes.dragged { transform: none; }
 .seu-painel-botoes > * { pointer-events: auto; }
-.seu-painel-botoes .hacker-orb { position: relative; z-index: 2; cursor: grab; touch-action: none; }
-.seu-painel-botoes .hacker-orb:active { cursor: grabbing; }
+.seu-painel-botoes .hacker-orb { position: relative; z-index: 2; cursor: pointer; touch-action: manipulation; }
+.seu-painel-botoes .hacker-orb:active { cursor: pointer; }
 .seu-painel-botoes .hacker-floating-menu { max-width: min(340px, calc(100vw - 32px)); gap: 0.3rem; padding: 0.4rem; }
 .seu-painel-botoes .hacker-floating-menu button { min-height: 2.15rem; padding: 0.45rem 0.7rem; font-size: 0.7rem; }
   .matrix-rain { opacity: 0.32; }
@@ -151,10 +150,9 @@ img, video, canvas, svg { max-width: 100%; }
 .notificacao-topo { position: fixed !important; top: 10px !important; left: 16px !important; right: 16px !important; z-index: 9999 !important; opacity: 1; visibility: visible; transition: opacity 0.5s ease, visibility 0.5s ease; width: auto !important; }
 .notificacao-topo.ocultar { opacity: 0; visibility: hidden; }
 .seu-painel-botoes { position: fixed !important; left: 50% !important; right: auto !important; bottom: 12px !important; width: max-content !important; max-width: calc(100vw - 16px) !important; transform: translateX(-50%); z-index: 9999 !important; background: transparent !important; pointer-events: none; }
-.seu-painel-botoes.dragged { transform: none; }
 .seu-painel-botoes > * { pointer-events: auto; }
-.seu-painel-botoes .hacker-orb { position: relative; z-index: 2; cursor: grab; touch-action: none; }
-.seu-painel-botoes .hacker-orb:active { cursor: grabbing; }
+.seu-painel-botoes .hacker-orb { position: relative; z-index: 2; cursor: pointer; touch-action: manipulation; }
+.seu-painel-botoes .hacker-orb:active { cursor: pointer; }
 .seu-painel-botoes .hacker-floating-menu { max-width: min(340px, calc(100vw - 32px)); gap: 0.3rem; padding: 0.4rem; }
 .seu-painel-botoes .hacker-floating-menu button { min-height: 2.15rem; padding: 0.45rem 0.7rem; font-size: 0.7rem; }
 @supports not (overflow: clip) { main { overflow-x: hidden; } }
