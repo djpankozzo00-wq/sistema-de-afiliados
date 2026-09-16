@@ -1,17 +1,20 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { AdminDashboard } from '@/components/admin-dashboard'
 
 const steps = ['API da Shopee', 'Grupos de destino', 'Bot de ofertas']
 
-export function TestAccessPanel({ token }: { token: string }) {
+export function TestAccessPanel({ token, plan = 'mensal' }: { token: string; plan?: string }) {
+  const duration = plan === 'semanal' ? 7 : plan === 'vitalicio' ? null : 30
   const [configured, setConfigured] = useState(false)
+  const [remaining, setRemaining] = useState(() => duration ? duration * 86400 : 0)
+  useEffect(() => { if (!duration) return; const timer = window.setInterval(() => setRemaining((value) => Math.max(0, value - 1)), 1000); return () => window.clearInterval(timer) }, [duration])
   const [apiKey, setApiKey] = useState('')
   const [groups, setGroups] = useState(['Grupo 1'])
   const [botToken, setBotToken] = useState('')
 
-  if (configured) return <div><div className="border-b border-primary/20 bg-primary/5 px-4 py-3 text-center text-sm text-primary">Modo demonstração ativo · Link {token.slice(0, 12)}...</div><AdminDashboard /></div>
+  if (configured) { const days = Math.floor(remaining / 86400); const hours = Math.floor((remaining % 86400) / 3600); const minutes = Math.floor((remaining % 3600) / 60); const seconds = remaining % 60; return <div><div className="border-b border-amber-500/30 bg-amber-500/10 px-4 py-3 text-center text-sm text-amber-200">Modo demonstração ativo · Tudo aqui é simulado e nenhuma oferta será enviada de verdade.<div className="mt-2 font-mono font-bold">Plano {plan} · {duration ? `${days}d ${hours}h ${minutes}m ${seconds}s restantes` : 'Vitalício · sem expiração'}</div></div><AdminDashboard simulation simulationNotice="Notificação simulada: as ofertas abaixo são fictícias e os envios apenas demonstram o funcionamento." /></div> }
 
   const canContinue = apiKey.trim() && groups.length > 0 && botToken.trim()
 
