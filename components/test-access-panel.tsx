@@ -5,7 +5,7 @@ import { AdminDashboard } from '@/components/admin-dashboard'
 
 const steps = ['API da Shopee', 'Grupos de destino', 'Bot de ofertas']
 
-export function TestAccessPanel({ token, plan = 'mensal' }: { token: string; plan?: string }) {
+export function TestAccessPanel({ token, plan = 'mensal', groupCount = 1 }: { token: string; plan?: string; groupCount?: number }) {
   const duration = plan === 'semanal' ? 7 : plan === 'vitalicio' ? null : 30
   const [configured, setConfigured] = useState(false)
   const [remaining, setRemaining] = useState(() => duration ? duration * 86400 : 0)
@@ -14,7 +14,7 @@ export function TestAccessPanel({ token, plan = 'mensal' }: { token: string; pla
   const [groups, setGroups] = useState(['Grupo 1'])
   const [botToken, setBotToken] = useState('')
 
-  if (configured) { const days = Math.floor(remaining / 86400); const hours = Math.floor((remaining % 86400) / 3600); const minutes = Math.floor((remaining % 3600) / 60); const seconds = remaining % 60; return <div><div className="border-b border-amber-500/30 bg-amber-500/10 px-4 py-3 text-center text-sm text-amber-200">Modo demonstração ativo · Tudo aqui é simulado e nenhuma oferta será enviada de verdade.<div className="mt-2 font-mono font-bold">Plano {plan} · {duration ? `${days}d ${hours}h ${minutes}m ${seconds}s restantes` : 'Vitalício · sem expiração'}</div></div><AdminDashboard simulation simulationNotice="Notificação simulada: as ofertas abaixo são fictícias e os envios apenas demonstram o funcionamento." /></div> }
+  if (configured) { const days = Math.floor(remaining / 86400); const hours = Math.floor((remaining % 86400) / 3600); const minutes = Math.floor((remaining % 3600) / 60); const seconds = remaining % 60; return <div><div className="border-b border-amber-500/30 bg-amber-500/10 px-4 py-3 text-center text-sm text-amber-200">Modo demonstração ativo · Tudo aqui é simulado e nenhuma oferta será enviada de verdade.<div className="mt-2 font-mono font-bold">Plano {plan} · {duration ? `${days}d ${hours}h ${minutes}m ${seconds}s restantes` : 'Vitalício · sem expiração'}</div></div><div className="border-b border-primary/20 bg-background/80 px-4 py-3"><p className="text-center text-xs font-semibold uppercase tracking-[0.18em] text-primary">Grupos disponíveis no plano simulado</p><div className="mx-auto mt-2 flex max-w-md flex-wrap justify-center gap-2">{Array.from({ length: groupCount }, (_, index) => <button key={index} onClick={() => window.alert(`Simulação: Grupo ${index + 1} selecionado. Nenhuma mensagem real será enviada.`)} className="rounded-xl border border-primary/40 bg-primary/10 px-4 py-2 text-sm font-semibold text-primary">Grupo {index + 1}</button>)}</div></div><AdminDashboard simulation simulationNotice="Notificação simulada: as ofertas abaixo são fictícias e os envios apenas demonstram o funcionamento." /></div> }
 
   const canContinue = apiKey.trim() && groups.length > 0 && botToken.trim()
 
