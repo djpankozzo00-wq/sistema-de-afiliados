@@ -58,7 +58,7 @@ export function AdminDashboard() {
 
   useEffect(() => { if (!notice) { setNoticeHidden(false); return }; setNoticeHidden(false); const timer = window.setTimeout(() => setNoticeHidden(true), 3000); return () => window.clearTimeout(timer) }, [notice])
   const startDragging = (event: React.PointerEvent<HTMLDivElement>) => { const rect = event.currentTarget.getBoundingClientRect(); dragRef.current = { offsetX: event.clientX - rect.left, offsetY: event.clientY - rect.top }; event.currentTarget.setPointerCapture(event.pointerId) }
-  const dragButtons = (event: React.PointerEvent<HTMLDivElement>) => { if (!dragRef.current) return; setDragPosition({ x: Math.max(8, Math.min(window.innerWidth - 90, event.clientX - dragRef.current.offsetX)), y: Math.max(8, Math.min(window.innerHeight - 70, event.clientY - dragRef.current.offsetY)) }) }
+  const dragButtons = (event: React.PointerEvent<HTMLDivElement>) => { if (!dragRef.current) return; const rect = event.currentTarget.getBoundingClientRect(); const maxX = Math.max(8, window.innerWidth - rect.width - 8); const maxY = Math.max(8, window.innerHeight - rect.height - 8); setDragPosition({ x: Math.max(8, Math.min(maxX, event.clientX - dragRef.current.offsetX)), y: Math.max(8, Math.min(maxY, event.clientY - dragRef.current.offsetY)) }) }
   const stopDragging = () => { dragRef.current = null }
 
   useEffect(() => {
