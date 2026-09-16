@@ -9,14 +9,14 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       {
-        url: '/icon-dark-32x32.png',
+        url: '/images/app-icon.png',
       },
       {
         url: '/icon.svg',
         type: 'image/svg+xml',
       },
     ],
-    apple: '/apple-icon.png',
+    apple: '/images/app-icon.png',
   },
 }
 
