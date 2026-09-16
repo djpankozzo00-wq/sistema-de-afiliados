@@ -134,16 +134,26 @@ img, video, canvas, svg { max-width: 100%; }
   .hacker-floating-controls { position: fixed !important; bottom: 0 !important; z-index: 9999 !important; justify-content: center; align-self: flex-start; }
   .hacker-floating-controls.dragged { transform: translate(var(--drag-x, 0), var(--drag-y, 0)); }
   .notificacao-topo { position: fixed !important; top: 10px !important; left: 16px !important; right: 16px !important; z-index: 9999 !important; opacity: 1; visibility: visible; transition: opacity 0.5s ease, visibility 0.5s ease; width: auto !important; }
-.notificacao-topo.ocultar { opacity: 0; visibility: hidden; }
-.seu-painel-botoes { position: fixed !important; bottom: 0 !important; left: 0 !important; right: 0 !important; z-index: 9999 !important; }
+.notificacao-topo.ocultar { opacity: 0; visibility: hidden; pointer-events: none; }
+@media (max-width: 640px) { .notificacao-topo { left: 72px !important; right: 72px !important; max-width: none !important; border-radius: 18px; } }
+.seu-painel-botoes { position: fixed !important; bottom: 0 !important; left: 32px !important; right: 32px !important; width: auto !important; max-width: none !important; z-index: 9999 !important; justify-content: center !important; padding: 12px 10px 14px !important; border: 1px solid rgba(255,255,255,.12); border-radius: 26px 26px 0 0; background: rgba(20,20,20,.96); box-shadow: 0 -8px 28px rgba(0,0,0,.35); }
+.seu-painel-botoes .hacker-orb { position: absolute; right: -2px; bottom: calc(100% + 8px); background: #f4f4f4; color: #111; border-color: rgba(255,255,255,.5); box-shadow: 0 3px 16px rgba(0,0,0,.35); }
+.seu-painel-botoes .hacker-floating-menu { width: 100%; justify-content: center; border: 0; background: transparent; box-shadow: none; }
+.seu-painel-botoes > div:first-child { position: absolute; right: 46px; bottom: calc(100% + 20px); }
+@media (max-width: 640px) { .seu-painel-botoes { left: 32px !important; right: 32px !important; } }
   .matrix-rain { opacity: 0.32; }
   .matrix-rain span { font-size: 0.68rem; }
 }
 @media (min-width: 641px) { .matrix-rain { opacity: 0.16; } }
 .hacker-floating-controls { position: fixed !important; bottom: 0 !important; z-index: 9999 !important; align-self: flex-start; }
 .notificacao-topo { position: fixed !important; top: 10px !important; left: 16px !important; right: 16px !important; z-index: 9999 !important; opacity: 1; visibility: visible; transition: opacity 0.5s ease, visibility 0.5s ease; width: auto !important; }
-.notificacao-topo.ocultar { opacity: 0; visibility: hidden; }
-.seu-painel-botoes { position: fixed !important; bottom: 0 !important; left: 0 !important; right: 0 !important; z-index: 9999 !important; }
+.notificacao-topo.ocultar { opacity: 0; visibility: hidden; pointer-events: none; }
+@media (max-width: 640px) { .notificacao-topo { left: 72px !important; right: 72px !important; max-width: none !important; border-radius: 18px; } }
+.seu-painel-botoes { position: fixed !important; bottom: 0 !important; left: 32px !important; right: 32px !important; width: auto !important; max-width: none !important; z-index: 9999 !important; justify-content: center !important; padding: 12px 10px 14px !important; border: 1px solid rgba(255,255,255,.12); border-radius: 26px 26px 0 0; background: rgba(20,20,20,.96); box-shadow: 0 -8px 28px rgba(0,0,0,.35); }
+.seu-painel-botoes .hacker-orb { position: absolute; right: -2px; bottom: calc(100% + 8px); background: #f4f4f4; color: #111; border-color: rgba(255,255,255,.5); box-shadow: 0 3px 16px rgba(0,0,0,.35); }
+.seu-painel-botoes .hacker-floating-menu { width: 100%; justify-content: center; border: 0; background: transparent; box-shadow: none; }
+.seu-painel-botoes > div:first-child { position: absolute; right: 46px; bottom: calc(100% + 20px); }
+@media (max-width: 640px) { .seu-painel-botoes { left: 32px !important; right: 32px !important; } }
 @supports not (overflow: clip) { main { overflow-x: hidden; } }
 body { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 1.5px; background-color: #020603; background-image: linear-gradient(rgba(0, 255, 102, 0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 255, 102, 0.045) 1px, transparent 1px), radial-gradient(circle at 50% 0%, rgba(0, 255, 102, 0.08), transparent 42%); background-size: 28px 28px, 28px 28px, 100% 100%; }
 .dark button { font-family: inherit; letter-spacing: 1px; }
