@@ -8,10 +8,16 @@ export async function POST(request: Request) {
   if (!token || !prices[plan] || ![1, 2, 3].includes(groups)) return NextResponse.json({ error: 'Dados inválidos' }, { status: 400 })
   const link = await pool.query('SELECT id FROM subscription_links WHERE token = $1 AND status = $2 LIMIT 1', [token, 'pending'])
   if (!link.rows[0]) return NextResponse.json({ error: 'Link inválido ou já utilizado' }, { status: 404 })
-  const apiUrl = process.env.SYNC_PAY_API_URL
-  if (!apiUrl || !process.env.SYNC_PAY_API_KEY) return NextResponse.json({ error: 'SyncPay não configurada. Verifique SYNC_PAY_API_URL e SYNC_PAY_API_KEY.' }, { status: 503 })
+  const apiUrl = (process.env.SYNC_PAY_API_URL || 'https://api.syncpayments.com.br').replace(/\/$/, '')
+  const clientId = process.env.SYNC_PAY_CLIENT_ID
+  const clientSecret = process.env.SYNC_PAY_CLIENT_SECRET
+  if (!clientId || !clientSecret) return NextResponse.json({ error: 'SyncPay não configurada. Cadastre SYNC_PAY_CLIENT_ID e SYNC_PAY_CLIENT_SECRET.' }, { status: 503 })
+  const tokenResponse = await fetch(`${apiUrl}/api/partner/v1/auth-token`, { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify({ client_id: clientId, client_secret: clientSecret }) })
+  const tokenData = await tokenResponse.json().catch(() => ({}))
+  const accessToken = tokenData.access_token
+  if (!tokenResponse.ok || !accessToken) return NextResponse.json({ error: tokenData.message || 'Não foi possível autenticar na SyncPay.' }, { status: 502 })
   const origin = request.headers.get('origin') || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
-  const response = await fetch(`${apiUrl.replace(/\/$/, '')}/api/partner/v1/cash-in`, { method: 'POST', headers: { Authorization: `Bearer ${process.env.SYNC_PAY_API_KEY}`, 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify({ amount: prices[plan] / 100, description: `Plano ${plan} - ${groups} grupo(s)`, webhook_url: `${origin}/api/premium/webhook`, client: { name: 'Cliente Achadinhos', cpf: '00000000000', email: `cliente-${token.slice(0, 8)}@achadinhos.local`, phone: '11999999999' } }) })
+  const response = await fetch(`${apiUrl}/api/partner/v1/cash-in`, { method: 'POST', headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify({ amount: prices[plan] / 100, description: `Plano ${plan} - ${groups} grupo(s)`, webhook_url: `${origin}/api/premium/webhook`, client: { name: 'Cliente Achadinhos', cpf: '00000000000', email: `cliente-${token.slice(0, 8)}@achadinhos.local`, phone: '11999999999' } }) })
   const data = await response.json().catch(() => ({}))
   if (!response.ok) return NextResponse.json({ error: data.message || data.error || 'SyncPay recusou o pagamento', details: process.env.NODE_ENV === 'development' ? data : undefined }, { status: 502 })
   const payload = data.data || data.payment || data.transaction || data
