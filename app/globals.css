@@ -191,6 +191,10 @@ body { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monos
 textarea[readonly] { overflow: hidden !important; scrollbar-width: none; }
 textarea[readonly]::-webkit-scrollbar { display: none; }
 
+.dark [class*="bg-card"], .dark [class*="bg-background"], .dark [class*="bg-muted"], .dark [class*="bg-popover"] { background-color: color-mix(in srgb, var(--card) 72%, transparent) !important; backdrop-filter: blur(10px); }
+.dark main > div > section, .dark main > div > article { background: linear-gradient(135deg, rgba(3, 22, 13, 0.68), rgba(0, 8, 5, 0.58)) !important; }
+.dark main > header { background: rgba(2, 6, 4, 0.72) !important; backdrop-filter: blur(12px); }
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
