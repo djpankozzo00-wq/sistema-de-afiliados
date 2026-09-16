@@ -13,6 +13,7 @@ export function TestAccessPanel({ token, plan = 'mensal', expiresAt, groupCount 
   const expiry = expiresAt ? new Date(expiresAt).getTime() : null
   const [remaining, setRemaining] = useState(() => expiry ? Math.max(0, expiry - Date.now()) : 0)
   useEffect(() => { if (!expiry) return; const update = () => setRemaining(Math.max(0, expiry - Date.now())); update(); const timer = window.setInterval(update, 1000); return () => window.clearInterval(timer) }, [expiry])
+  useEffect(() => { if (configured && expiry && remaining <= 0) window.location.replace(`/acesso/${token}`) }, [configured, expiry, remaining, token])
   const [apiKey, setApiKey] = useState('')
   const [groups, setGroups] = useState(['Grupo 1'])
   const [botToken, setBotToken] = useState('')
