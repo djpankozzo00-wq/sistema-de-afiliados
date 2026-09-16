@@ -10,17 +10,17 @@ const plans = [
   { id: 'vitalicio', name: 'Vitalício', price: 'R$ 125,90', days: null },
 ]
 
-export function PremiumCheckout({ token, initialStatus, isTest = false }: { token: string; initialStatus: string; isTest?: boolean }) {
+export function PremiumCheckout({ token, initialStatus, initialExpiresAt, isTest = false }: { token: string; initialStatus: string; initialExpiresAt?: string | null; isTest?: boolean }) {
   const [selected, setSelected] = useState(plans[1])
   const [groups, setGroups] = useState(1)
   const [status, setStatus] = useState(initialStatus)
   const [message, setMessage] = useState('')
   const [seconds, setSeconds] = useState(0)
   const [pix, setPix] = useState<{ code: string | null; image: string | null; checkoutUrl: string | null }>({ code: null, image: null, checkoutUrl: null })
-  const expiresAt = useMemo(() => selected.days ? Date.now() + selected.days * 86400000 : null, [selected.days])
+  const expiresAt = useMemo(() => initialExpiresAt ? new Date(initialExpiresAt).getTime() : null, [initialExpiresAt])
 
   useEffect(() => { if (status !== 'approved') return; const timer = window.setInterval(() => setSeconds(Math.max(0, (expiresAt ?? Date.now()) - Date.now())), 1000); return () => window.clearInterval(timer) }, [status, expiresAt])
-  const countdown = status === 'approved' && selected.days ? new Date(seconds).toISOString().slice(11, 19) : status === 'approved' ? 'Sem expiração' : 'Aguardando pagamento'
+  const countdown = status === 'approved' && expiresAt ? `${Math.floor(seconds / 86400000)}d ${String(Math.floor((seconds % 86400000) / 3600000)).padStart(2, '0')}h ${String(Math.floor((seconds % 3600000) / 60000)).padStart(2, '0')}m ${String(Math.floor((seconds % 60000) / 1000)).padStart(2, '0')}s` : status === 'approved' ? 'Sem expiração' : 'Aguardando pagamento'
   const simulateApproval = async () => { setMessage('Simulando aprovação...'); const response = await fetch('/api/premium/test-approve', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token, plan: selected.id, groups }) }); const data = await response.json(); if (!response.ok) return setMessage(data.error || 'Não foi possível simular.'); setStatus('approved'); setMessage('Pagamento aprovado em modo de teste. Abrindo o painel...'); window.setTimeout(() => { window.location.href = `/painel-teste/${token}` }, 500); }
   const checkout = async () => { setMessage('Gerando pagamento Pix...'); setPix({ code: null, image: null, checkoutUrl: null }); const response = await fetch('/api/premium/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token, plan: selected.id, groups }) }); const data = await response.json().catch(() => ({ error: 'A API retornou uma resposta inválida.' })); if (!response.ok) return setMessage(data.error || 'Não foi possível gerar o pagamento.'); setPix({ code: data.pixCode || null, image: data.qrCode && isImageSource(data.qrCode) ? data.qrCode : data.pixCode ? `https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=${encodeURIComponent(data.pixCode)}` : null, checkoutUrl: data.checkoutUrl || null }); setMessage('Pix gerado. Escaneie o QR Code ou copie o código abaixo.') } 
 const copyPix = async () => { if (!pix.code) return; await navigator.clipboard.writeText(pix.code); setMessage('Código Pix copiado.') }
