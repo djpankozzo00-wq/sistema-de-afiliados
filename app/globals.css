@@ -135,7 +135,7 @@ img, video, canvas, svg { max-width: 100%; }
   .hacker-floating-controls.dragged { transform: translate(var(--drag-x, 0), var(--drag-y, 0)); }
   .notificacao-topo { position: fixed !important; top: 10px !important; left: 16px !important; right: 16px !important; z-index: 9999 !important; opacity: 1; visibility: visible; transition: opacity 0.5s ease, visibility 0.5s ease; width: auto !important; }
 .notificacao-topo.ocultar { opacity: 0; visibility: hidden; }
-.seu-painel-botoes { position: fixed !important; bottom: 0 !important; left: 0 !important; right: 0 !important; z-index: 9999 !important; background: transparent !important; pointer-events: none; }
+.seu-painel-botoes { position: fixed !important; z-index: 9999 !important; background: transparent !important; pointer-events: auto; }
 .seu-painel-botoes > * { pointer-events: auto; }
 .seu-painel-botoes .hacker-orb { position: relative; z-index: 2; cursor: grab; touch-action: none; }
 .seu-painel-botoes .hacker-orb:active { cursor: grabbing; }
@@ -146,7 +146,7 @@ img, video, canvas, svg { max-width: 100%; }
 .hacker-floating-controls { position: fixed !important; bottom: 0 !important; z-index: 9999 !important; align-self: flex-start; }
 .notificacao-topo { position: fixed !important; top: 10px !important; left: 16px !important; right: 16px !important; z-index: 9999 !important; opacity: 1; visibility: visible; transition: opacity 0.5s ease, visibility 0.5s ease; width: auto !important; }
 .notificacao-topo.ocultar { opacity: 0; visibility: hidden; }
-.seu-painel-botoes { position: fixed !important; bottom: 0 !important; left: 0 !important; right: 0 !important; z-index: 9999 !important; background: transparent !important; pointer-events: none; }
+.seu-painel-botoes { position: fixed !important; z-index: 9999 !important; background: transparent !important; pointer-events: auto; }
 .seu-painel-botoes > * { pointer-events: auto; }
 .seu-painel-botoes .hacker-orb { position: relative; z-index: 2; cursor: grab; touch-action: none; }
 .seu-painel-botoes .hacker-orb:active { cursor: grabbing; }
