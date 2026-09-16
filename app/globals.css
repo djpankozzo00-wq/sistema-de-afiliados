@@ -161,11 +161,11 @@ body { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monos
 .matrix-rain span:nth-child(4n) { font-size: 0.72rem; opacity: 0.55; }
 @keyframes matrix-fall { from { transform: translateY(-10vh); } to { transform: translateY(145vh); } }
 .dark header { border-color: oklch(0.78 0.19 145 / 0.28) !important; box-shadow: 0 1px 28px oklch(0.78 0.19 145 / 0.07); }
-.dark main > div:not(.matrix-rain) { position: relative; z-index: 1; animation: hacker-enter 500ms ease-out both; }
+.dark main > div:not(.matrix-rain) { position: relative; z-index: 1; animation: hacker-enter 500ms ease-out; }
 .dark main > header, .dark main > section { position: relative; z-index: 1; }
 .dark [class*='rounded-2xl'] { transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease; }
 .dark [class*='rounded-2xl']:hover { border-color: oklch(0.78 0.19 145 / 0.34); box-shadow: 0 0 24px oklch(0.78 0.19 145 / 0.08); }
-@keyframes hacker-enter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes hacker-enter { from { opacity: 0; } to { opacity: 1; } }
 @keyframes neon-pulse { 0%, 100% { filter: drop-shadow(0 0 4px rgba(0, 255, 102, 0.35)); } 50% { filter: drop-shadow(0 0 13px rgba(0, 255, 102, 0.75)); } }
 @keyframes status-blink { 0%, 92%, 100% { opacity: 1; } 96% { opacity: 0.35; } }
 .dark main h1 { text-shadow: 0 0 12px rgba(0, 255, 102, 0.34); }
