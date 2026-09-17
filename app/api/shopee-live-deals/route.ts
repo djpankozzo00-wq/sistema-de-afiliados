@@ -14,12 +14,20 @@ function struck(value: string) {
 function caption(title: string, price: number, original: number, url: string) {
   const formattedPrice = price.toFixed(2).replace('.', ',')
   const productEmoji = /fone|áudio|headset|caixa de som/i.test(title) ? '🎧' : /tênis|sapato|sandália|chinelo/i.test(title) ? '👟' : /cozinha|panela|organizador|casa/i.test(title) ? '🏠' : /beleza|maquiagem|perfume|skincare/i.test(title) ? '✨' : /celular|eletrônico|smart|cabo|carregador/i.test(title) ? '📱' : '🛍️'
-  const occasion = /cozinha|panela|organizador|casa/i.test(title) ? 'Ideal para organizar sua casa e facilitar a rotina! 🏠' : /beleza|maquiagem|perfume|skincare/i.test(title) ? 'Perfeito para seus cuidados diários e para presentear! ✨' : 'Perfeito para facilitar o dia a dia e também para presentear! 😍'
-  return `Imagina ter ${title.toLowerCase()} na sua rotina? ${productEmoji} ${occasion} Aproveite este achadinho especial! 💖
-- ${title}
-💰 À partir de: R$ ${formattedPrice}
-🛒 Compre com desconto: ${url}
-⚡ O produto abre clicando na IMAGEM do vídeo, é só aguardar carregar! 🎁`
+  const shortPhrase = /cozinha|panela|organizador|casa/i.test(title) ? 'Mais praticidade para sua rotina! 🏠' : /beleza|maquiagem|perfume|skincare/i.test(title) ? 'Seu momento de cuidado merece! ✨' : 'Um achadinho que vale a pena! 😍'
+  const discount = original > price ? Math.round((1 - price / original) * 100) : 0
+  const formattedOriginal = original.toFixed(2).replace('.', ',')
+  return `${shortPhrase}
+
+🔥 OFERTA RELÂMPAGO 🔥
+
+${productEmoji} ${title}
+
+💰 Por apenas R$ ${formattedPrice}!
+${discount > 0 ? `🏷️ De ${struck(`R$ ${formattedOriginal}`)} por R$ ${formattedPrice} — ${discount}% OFF\n` : ''}⭐ Achadinho com preço especial
+
+🚀 Confira antes que acabe:
+${url}`
 }
 
 export async function POST(request: Request) {
