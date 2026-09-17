@@ -6,8 +6,8 @@ const normalizeTitle = (value: string) => value.normalize('NFD').replace(/[\u030
 
 export async function POST(request: Request) {
   try {
-    const { caption, imageUrl, productId, title, affiliateUrl, chatIds, targetChatIds, forceLink } = await request.json() as { caption?: string; imageUrl?: string; productId?: string; title?: string; affiliateUrl?: string; chatIds?: string[]; targetChatIds?: string[]; forceLink?: boolean }
-    const token = process.env.TELEGRAM_BOT_TOKEN
+    const { caption, imageUrl, productId, title, affiliateUrl, chatIds, targetChatIds, forceLink, botToken } = await request.json() as { caption?: string; imageUrl?: string; productId?: string; title?: string; affiliateUrl?: string; chatIds?: string[]; targetChatIds?: string[]; forceLink?: boolean; botToken?: string }
+    const token = String(botToken || process.env.TELEGRAM_BOT_TOKEN || '').trim()
     const defaultChatId = process.env.TELEGRAM_CHAT_ID
     if (!token) return NextResponse.json({ error: 'Configure TELEGRAM_BOT_TOKEN.' }, { status: 503 })
     if (!caption?.trim()) return NextResponse.json({ error: 'A oferta não possui texto.' }, { status: 400 })
