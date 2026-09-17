@@ -11,6 +11,12 @@ function struck(value: string) {
   return value.split('').map((character) => `${character}\u0336`).join('')
 }
 
+function shortProductName(title: string) {
+  const cleaned = title.replace(/\s+/g, ' ').trim()
+  const firstPart = cleaned.split(/\s+(?:com|para|de|do|da|e)\s+|[,|/\-–—]/i)[0].trim()
+  return (firstPart || cleaned).split(' ').slice(0, 5).join(' ')
+}
+
 function caption(title: string, price: number, original: number, url: string) {
   const formattedPrice = price.toFixed(2).replace('.', ',')
   const productEmoji = /fone|áudio|headset|caixa de som/i.test(title) ? '🎧' : /tênis|sapato|sandália|chinelo/i.test(title) ? '👟' : /cozinha|panela|organizador|casa/i.test(title) ? '🏠' : /beleza|maquiagem|perfume|skincare/i.test(title) ? '✨' : /celular|eletrônico|smart|cabo|carregador/i.test(title) ? '📱' : '🛍️'
