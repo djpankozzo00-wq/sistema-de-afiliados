@@ -14,7 +14,7 @@ function struck(value: string) {
 function caption(title: string, price: number, original: number, url: string) {
   const formattedPrice = price.toFixed(2).replace('.', ',')
   const productEmoji = /fone|áudio|headset|caixa de som/i.test(title) ? '🎧' : /tênis|sapato|sandália|chinelo/i.test(title) ? '👟' : /cozinha|panela|organizador|casa/i.test(title) ? '🏠' : /beleza|maquiagem|perfume|skincare/i.test(title) ? '✨' : /celular|eletrônico|smart|cabo|carregador/i.test(title) ? '📱' : '🛍️'
-  const shortPhrase = /cozinha|panela|organizador|casa/i.test(title) ? 'Mais praticidade para sua rotina! 🏠' : /beleza|maquiagem|perfume|skincare/i.test(title) ? 'Seu momento de cuidado merece! ✨' : 'Um achadinho que vale a pena! 😍'
+  const shortPhrase = /fone|headset|áudio|caixa de som/i.test(title) ? 'Som de qualidade para acompanhar seu dia! 🎧' : /celular|smartphone|smartwatch|eletrônico|carregador/i.test(title) ? 'Tecnologia prática para facilitar sua rotina! 📱' : /cozinha|panela|organizador|casa|decoração/i.test(title) ? 'Mais praticidade e charme para sua casa! 🏠' : /beleza|maquiagem|perfume|skincare|cabelo/i.test(title) ? 'Seu momento de cuidado merece esse mimo! ✨' : /tênis|sapato|sandália|chinelo|bolsa|vestido|roupa/i.test(title) ? 'Estilo e conforto para qualquer ocasião! 👟' : 'Um achadinho especial para você aproveitar! 😍'
   const discount = original > price ? Math.round((1 - price / original) * 100) : 0
   const formattedOriginal = original.toFixed(2).replace('.', ',')
   return `${shortPhrase}
