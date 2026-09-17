@@ -14,8 +14,8 @@ function struck(value: string) {
 function caption(title: string, price: number, original: number, url: string) {
   const formattedPrice = price.toFixed(2).replace('.', ',')
   const productEmoji = /fone|áudio|headset|caixa de som/i.test(title) ? '🎧' : /tênis|sapato|sandália|chinelo/i.test(title) ? '👟' : /cozinha|panela|organizador|casa/i.test(title) ? '🏠' : /beleza|maquiagem|perfume|skincare/i.test(title) ? '✨' : /celular|eletrônico|smart|cabo|carregador/i.test(title) ? '📱' : '🛍️'
-  const occasion = /cozinha|panela|organizador|casa/i.test(title) ? 'Perfeito para deixar sua casa mais prática e aproveitar a rotina! 🏠' : /beleza|maquiagem|perfume|skincare/i.test(title) ? 'Ideal para renovar seus cuidados e montar um presente especial! ✨' : 'Perfeito para facilitar o dia a dia e garantir aquele achadinho especial! 😍'
-  return `Imagina ter ${title.toLowerCase()} no dia a dia? ${productEmoji} ${occasion} Aproveite para usar em momentos especiais ou presentear alguém querido! 💖
+  const occasion = /cozinha|panela|organizador|casa/i.test(title) ? 'Ideal para organizar sua casa e facilitar a rotina! 🏠' : /beleza|maquiagem|perfume|skincare/i.test(title) ? 'Perfeito para seus cuidados diários e para presentear! ✨' : 'Perfeito para facilitar o dia a dia e também para presentear! 😍'
+  return `Imagina ter ${title.toLowerCase()} na sua rotina? ${productEmoji} ${occasion} Aproveite este achadinho especial! 💖
 - ${title}
 💰 À partir de: R$ ${formattedPrice}
 🛒 Compre com desconto: ${url}
