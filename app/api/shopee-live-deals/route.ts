@@ -18,13 +18,14 @@ function caption(title: string, price: number, original: number, url: string) {
   const phraseIndex = Math.abs([...title].reduce((total, character) => total + character.charCodeAt(0), 0)) % phraseSets.length
   const shortTitle = title.split(/,|\s+(?:com|para|de uso|ideal para| portátil|portátil)|\s+-\s+/i)[0].trim().replace(/\s+/g, ' ').split(' ').slice(0, 5).join(' ')
   const creativeIntros = [
-    `Olha o que eu encontrei: ${shortTitle.toLowerCase()}!`,
-    `${shortTitle} é aquele achadinho que chama atenção!`,
-    `Sabe quando aparece algo que combina com você? ${shortTitle}!`,
-    `Esse ${shortTitle.toLowerCase()} merece um lugar na sua rotina!`,
-    `Aposto que você vai amar descobrir ${shortTitle.toLowerCase()}!`,
+  `✨ ${shortTitle} é o achadinho que faltava!`,
+  `🎯 Esse ${shortTitle.toLowerCase()} é perfeição!`,
+  `💎 ${shortTitle} combina com seu estilo!`,
+  `🚀 Descobre esse ${shortTitle.toLowerCase()}!`,
+  `😍 Olha só esse ${shortTitle.toLowerCase()}!`,
+  `⚡ ${shortTitle} que vai mudar seu dia!`,
   ]
-  const shortPhrase = `${creativeIntros[phraseIndex % creativeIntros.length]} ${phraseSets[phraseIndex]}`
+  const shortPhrase = creativeIntros[phraseIndex % creativeIntros.length]
   const discount = original > price ? Math.round((1 - price / original) * 100) : 0
   const formattedOriginal = original.toFixed(2).replace('.', ',')
   return `${shortPhrase}
