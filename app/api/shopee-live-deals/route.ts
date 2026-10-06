@@ -14,18 +14,20 @@ function struck(value: string) {
 function caption(title: string, price: number, original: number, url: string) {
   const formattedPrice = price.toFixed(2).replace('.', ',')
   const productEmoji = /fone|áudio|headset|caixa de som/i.test(title) ? '🎧' : /tênis|sapato|sandália|chinelo/i.test(title) ? '👟' : /cozinha|panela|organizador|casa/i.test(title) ? '🏠' : /beleza|maquiagem|perfume|skincare/i.test(title) ? '✨' : /celular|eletrônico|smart|cabo|carregador/i.test(title) ? '📱' : '🛍️'
-  const phraseSets = /fone|headset|áudio|caixa de som/i.test(title) ? ['Seu som merece esse upgrade! 🎧', 'Mais imersão para ouvir suas músicas favoritas! 🎶', 'Qualidade sonora para acompanhar cada momento! 🔊', 'Para transformar sua playlist em experiência! 🎵'] : /celular|smartphone|smartwatch|eletrônico|carregador/i.test(title) ? ['Tecnologia que deixa tudo mais prático! 📱', 'Seu dia conectado com muito mais facilidade! ⚡', 'Um upgrade inteligente para a sua rotina! ✨', 'Praticidade e inovação na palma da mão! 🚀'] : /cozinha|panela|organizador|casa|decoração/i.test(title) ? ['Um toque especial para deixar a casa impecável! 🏠', 'Mais organização para uma rotina leve! ✨', 'Aquele detalhe que transforma o ambiente! 💖', 'Praticidade e charme para os seus espaços! 🏡'] : /beleza|maquiagem|perfume|skincare|cabelo/i.test(title) ? ['Seu autocuidado acaba de ganhar um aliado! ✨', 'Para realçar sua beleza todos os dias! 💖', 'Um mimo para deixar sua rotina mais especial! 💄', 'Seu ritual de beleza merece esse achadinho! 🌸'] : /tênis|sapato|sandália|chinelo|bolsa|vestido|roupa/i.test(title) ? ['Conforto e estilo para você arrasar! 👟', 'Um toque de estilo para qualquer ocasião! ✨', 'Seu look merece esse achadinho! 💖', 'Moda prática para acompanhar seu ritmo! 👜'] : ['Sabe aquele produto que facilita tudo? 😍', 'Um achadinho para deixar seu dia melhor! ✨', 'Pequeno detalhe, grande diferença na rotina! 💖', 'Vale a pena conhecer esse queridinho! 🛍️']
-  const phraseIndex = Math.abs([...title].reduce((total, character) => total + character.charCodeAt(0), 0)) % phraseSets.length
-  const shortTitle = title.split(/,|\s+(?:com|para|de uso|ideal para| portátil|portátil)|\s+-\s+/i)[0].trim().replace(/\s+/g, ' ').split(' ').slice(0, 5).join(' ')
-  const creativeIntros = [
-  `✨ ${shortTitle} é o achadinho que faltava!`,
-  `🎯 Esse ${shortTitle.toLowerCase()} é perfeição!`,
-  `💎 ${shortTitle} combina com seu estilo!`,
-  `🚀 Descobre esse ${shortTitle.toLowerCase()}!`,
-  `😍 Olha só esse ${shortTitle.toLowerCase()}!`,
-  `⚡ ${shortTitle} que vai mudar seu dia!`,
-  ]
-  const shortPhrase = creativeIntros[phraseIndex % creativeIntros.length]
+  const category = /fone|headset|áudio|caixa de som/i.test(title) ? 'áudio' : /celular|smartphone|smartwatch|eletrônico|carregador/i.test(title) ? 'tecnologia' : /cozinha|panela|organizador|casa|decoração/i.test(title) ? 'casa' : /beleza|maquiagem|perfume|skincare|cabelo/i.test(title) ? 'beleza' : /tênis|sapato|sandália|chinelo|bolsa|vestido|roupa/i.test(title) ? 'moda' : 'achadinho'
+  const phraseParts: Record<string, [string[], string[], string[]]> = {
+    áudio: [['O som de', 'A experiência com', 'Sua playlist pede', 'Para curtir melhor', 'Mais emoção com'], ['vai elevar', 'combina com', 'transforma', 'deixa ainda melhor', 'faz diferença em'], ['cada momento', 'seu dia', 'suas músicas', 'sua rotina', 'seu tempo livre']],
+    tecnologia: [['A praticidade de', 'O upgrade de', 'Sua rotina ganha com', 'Mais facilidade usando', 'A inovação de'], ['vai transformar', 'combina com', 'simplifica', 'moderniza', 'melhora'], ['seu dia', 'sua rotina', 'seus momentos', 'seu trabalho', 'sua experiência']],
+    casa: [['O charme de', 'A praticidade de', 'Sua casa merece', 'Para deixar tudo melhor com', 'Um toque especial de'], ['transforma', 'organiza', 'valoriza', 'renova', 'facilita'], ['seu espaço', 'sua rotina', 'seu cantinho', 'seu dia', 'sua casa']],
+    beleza: [['Seu momento combina com', 'O cuidado com', 'Para realçar', 'Um mimo para', 'A beleza de'], ['valoriza', 'renova', 'completa', 'realça', 'transforma'], ['seu ritual', 'seu estilo', 'sua rotina', 'seu autocuidado', 'seu visual']],
+    moda: [['Seu estilo pede', 'O conforto de', 'Para completar', 'Um toque de charme com', 'A versatilidade de'], ['valoriza', 'transforma', 'completa', 'renova', 'destaca'], ['seu look', 'seu visual', 'seu estilo', 'qualquer ocasião', 'sua rotina']],
+    achadinho: [['Olha só', 'Vale conhecer', 'Um detalhe que muda', 'Para facilitar', 'Você vai gostar de'], ['combina com', 'melhora', 'transforma', 'completa', 'deixa melhor'], ['seu dia', 'sua rotina', 'seu espaço', 'seus momentos', 'sua experiência']],
+  }
+  const [starts, verbs, ends] = phraseParts[category]
+  const phraseSeed = [...`${title}|${url}`].reduce((total, character) => (total * 31 + character.charCodeAt(0)) >>> 0, 7)
+  const shortTitle = title.split(/,|\s+(?:com|para|de uso|ideal para| portátil|portátil)|\s+-\s+/i)[0].trim().replace(/\s+/g, ' ').split(' ').slice(0, 4).join(' ')
+  const modifiers = ['de um jeito especial', 'sem complicação', 'com muito charme', 'para aproveitar mais', 'com aquele toque extra', 'do jeito que você gosta', 'em qualquer ocasião', 'com praticidade', 'para deixar tudo melhor', 'com estilo e personalidade']
+  const shortPhrase = `${starts[phraseSeed % starts.length]} ${shortTitle.toLowerCase()} ${verbs[Math.floor(phraseSeed / starts.length) % verbs.length]} ${ends[Math.floor(phraseSeed / (starts.length * verbs.length)) % ends.length]} ${modifiers[Math.floor(phraseSeed / (starts.length * verbs.length * ends.length)) % modifiers.length]}!`
   const discount = original > price ? Math.round((1 - price / original) * 100) : 0
   const formattedOriginal = original.toFixed(2).replace('.', ',')
   return `${shortPhrase}
