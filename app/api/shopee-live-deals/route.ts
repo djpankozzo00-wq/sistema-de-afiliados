@@ -16,8 +16,15 @@ function caption(title: string, price: number, original: number, url: string) {
   const productEmoji = /fone|áudio|headset|caixa de som/i.test(title) ? '🎧' : /tênis|sapato|sandália|chinelo/i.test(title) ? '👟' : /cozinha|panela|organizador|casa/i.test(title) ? '🏠' : /beleza|maquiagem|perfume|skincare/i.test(title) ? '✨' : /celular|eletrônico|smart|cabo|carregador/i.test(title) ? '📱' : '🛍️'
   const phraseSets = /fone|headset|áudio|caixa de som/i.test(title) ? ['Seu som merece esse upgrade! 🎧', 'Mais imersão para ouvir suas músicas favoritas! 🎶', 'Qualidade sonora para acompanhar cada momento! 🔊', 'Para transformar sua playlist em experiência! 🎵'] : /celular|smartphone|smartwatch|eletrônico|carregador/i.test(title) ? ['Tecnologia que deixa tudo mais prático! 📱', 'Seu dia conectado com muito mais facilidade! ⚡', 'Um upgrade inteligente para a sua rotina! ✨', 'Praticidade e inovação na palma da mão! 🚀'] : /cozinha|panela|organizador|casa|decoração/i.test(title) ? ['Um toque especial para deixar a casa impecável! 🏠', 'Mais organização para uma rotina leve! ✨', 'Aquele detalhe que transforma o ambiente! 💖', 'Praticidade e charme para os seus espaços! 🏡'] : /beleza|maquiagem|perfume|skincare|cabelo/i.test(title) ? ['Seu autocuidado acaba de ganhar um aliado! ✨', 'Para realçar sua beleza todos os dias! 💖', 'Um mimo para deixar sua rotina mais especial! 💄', 'Seu ritual de beleza merece esse achadinho! 🌸'] : /tênis|sapato|sandália|chinelo|bolsa|vestido|roupa/i.test(title) ? ['Conforto e estilo para você arrasar! 👟', 'Um toque de estilo para qualquer ocasião! ✨', 'Seu look merece esse achadinho! 💖', 'Moda prática para acompanhar seu ritmo! 👜'] : ['Sabe aquele produto que facilita tudo? 😍', 'Um achadinho para deixar seu dia melhor! ✨', 'Pequeno detalhe, grande diferença na rotina! 💖', 'Vale a pena conhecer esse queridinho! 🛍️']
   const phraseIndex = Math.abs([...title].reduce((total, character) => total + character.charCodeAt(0), 0)) % phraseSets.length
-  const shortTitle = title.split(/,|\s+(?:com|para|de uso|ideal para| portátil|portátil)/i)[0].trim().replace(/\s+/g, ' ')
-  const shortPhrase = `${phraseSets[phraseIndex]} Olha só: ${shortTitle.toLowerCase()} — achei que combina com você!`
+  const shortTitle = title.split(/,|\s+(?:com|para|de uso|ideal para| portátil|portátil)|\s+-\s+/i)[0].trim().replace(/\s+/g, ' ').split(' ').slice(0, 5).join(' ')
+  const creativeIntros = [
+    `Olha o que eu encontrei: ${shortTitle.toLowerCase()}!`,
+    `${shortTitle} é aquele achadinho que chama atenção!`,
+    `Sabe quando aparece algo que combina com você? ${shortTitle}!`,
+    `Esse ${shortTitle.toLowerCase()} merece um lugar na sua rotina!`,
+    `Aposto que você vai amar descobrir ${shortTitle.toLowerCase()}!`,
+  ]
+  const shortPhrase = `${creativeIntros[phraseIndex % creativeIntros.length]} ${phraseSets[phraseIndex]}`
   const discount = original > price ? Math.round((1 - price / original) * 100) : 0
   const formattedOriginal = original.toFixed(2).replace('.', ',')
   return `${shortPhrase}
