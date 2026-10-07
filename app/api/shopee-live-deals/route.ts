@@ -32,15 +32,11 @@ function caption(title: string, price: number, original: number, url: string) {
   const formattedOriginal = original.toFixed(2).replace('.', ',')
   return `${shortPhrase}
 
-🔥 OFERTA RELÂMPAGO 🔥
-
 ${productEmoji} ${title}
 
 💰 Por apenas R$ ${formattedPrice}!
-${discount > 0 ? `🏷️ De ${struck(`R$ ${formattedOriginal}`)} por R$ ${formattedPrice} — ${discount}% OFF` : ''}
-
-🚀 Confira antes que acabe:
-${url}`
+${discount > 0 ? `🏷️ De ${struck(`R$ ${formattedOriginal}`)} por R$ ${formattedPrice} — ${discount}% OFF
+` : ''}🛒 ${url}`
 }
 
 export async function POST(request: Request) {
