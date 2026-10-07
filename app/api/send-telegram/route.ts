@@ -39,18 +39,17 @@ export async function POST(request: Request) {
       }
       try {
         const escapeHtml = (value: string) => value.replace(/[&<>\"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;', "'": '&#39;' })[character] || character)
-        const lines = caption.split('\n')
-        const formattedCaption = `<b>${escapeHtml(lines[0] || '')}</b>${lines.slice(1).length ? `\n${lines.slice(1).map(escapeHtml).join('\n')}` : ''}`
+        const formattedCaption = caption
         let endpoint = imageUrl ? `${base}/sendPhoto` : `${base}/sendMessage`
         let body = imageUrl
-          ? { chat_id: chatId, photo: imageUrl, caption: formattedCaption.slice(0, 1024), parse_mode: 'HTML' }
-          : { chat_id: chatId, text: formattedCaption.slice(0, 4096), parse_mode: 'HTML' }
+          ? { chat_id: chatId, photo: imageUrl, caption: formattedCaption.slice(0, 1024) }
+          : { chat_id: chatId, text: formattedCaption.slice(0, 4096) }
         let response = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), cache: 'no-store' })
         let data = await response.json() as { ok?: boolean; description?: string }
 
         if ((!response.ok || !data.ok) && imageUrl) {
           endpoint = `${base}/sendMessage`
-          body = { chat_id: chatId, text: formattedCaption.slice(0, 4096), parse_mode: 'HTML' }
+          body = { chat_id: chatId, text: formattedCaption.slice(0, 4096) }
           response = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), cache: 'no-store' })
           data = await response.json() as { ok?: boolean; description?: string }
         }

@@ -30,13 +30,15 @@ function caption(title: string, price: number, original: number, url: string) {
   const shortPhrase = `${starts[phraseSeed % starts.length]} ${shortTitle.toLowerCase()} ${verbs[Math.floor(phraseSeed / starts.length) % verbs.length]} ${ends[Math.floor(phraseSeed / (starts.length * verbs.length)) % ends.length]} ${modifiers[Math.floor(phraseSeed / (starts.length * verbs.length * ends.length)) % modifiers.length]}!`
   const discount = original > price ? Math.round((1 - price / original) * 100) : 0
   const formattedOriginal = original.toFixed(2).replace('.', ',')
-  return `${shortPhrase}
+  return `🔥 OFERTA RELÂMPAGO 🔥
 
 ${productEmoji} ${title}
 
 💰 Por apenas R$ ${formattedPrice}!
-${discount > 0 ? `🏷️ De ${struck(`R$ ${formattedOriginal}`)} por R$ ${formattedPrice} — ${discount}% OFF
-` : ''}🛒 ${url}`
+${discount > 0 ? `🏷️ De ${struck(`R$ ${formattedOriginal}`)} por R$ ${formattedPrice} — ${discount}% OFF\n` : ''}⭐ Achadinho com preço especial
+
+🚀 Confira antes que acabe:
+${url}`
 }
 
 export async function POST(request: Request) {
