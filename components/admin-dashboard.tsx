@@ -76,7 +76,17 @@ export function AdminDashboard({ simulation = false, clientMode = false, groupCo
     ['eletrônicos', 'teclado', 'mouse sem fio'],
     ['relógio feminino', 'óculos de sol', 'bijuterias'],
     ['moletom feminino', 'jaqueta feminina', 'calça jeans'],
-    ['air fryer', 'liquidificador', 'cafeteira']
+    ['air fryer', 'liquidificador', 'cafeteira'],
+    ['batom'],
+    ['tênis'],
+    ['vestido feminino'],
+    ['fone bluetooth'],
+    ['smartwatch'],
+    ['bolsa feminina'],
+    ['perfume feminino'],
+    ['celular'],
+    ['air fryer'],
+    ['cafeteira']
   ]
   const initialFetchDone = useRef(false)
   const returnToOfferId = useRef<string | null>(null)
