@@ -140,7 +140,7 @@ img, video, canvas, svg { max-width: 100%; }
 .seu-painel-botoes > * { pointer-events: auto; }
 .seu-painel-botoes .hacker-orb { position: relative; z-index: 2; cursor: pointer; touch-action: manipulation; background-image: url('/images/floating-icon.png') !important; background-size: cover; background-position: center; background-repeat: no-repeat; color: transparent; }
 .seu-painel-botoes .hacker-orb:active { cursor: pointer; }
-.seu-painel-botoes .hacker-floating-menu { max-width: min(340px, calc(100vw - 32px)); gap: 0.3rem; padding: 0.4rem; background: rgba(4, 12, 8, 0.42) !important; border-color: rgba(0, 255, 102, 0.28) !important; backdrop-filter: blur(5px); }
+.seu-painel-botoes .hacker-floating-menu { width: max-content !important; max-width: min(340px, calc(100vw - 32px)); gap: 0.3rem; padding: 0.4rem; background: rgba(4, 12, 8, 0.42) !important; border-color: rgba(0, 255, 102, 0.28) !important; backdrop-filter: blur(5px); }
 .seu-painel-botoes .hacker-floating-menu button { min-height: 2.15rem; padding: 0.45rem 0.7rem; font-size: 0.7rem; background: rgba(5, 14, 9, 0.42) !important; }
 .seu-painel-botoes .hacker-floating-menu button:hover { background: rgba(0, 255, 102, 0.14) !important; }
   .matrix-rain { opacity: 0.32; }
@@ -154,7 +154,7 @@ img, video, canvas, svg { max-width: 100%; }
 .seu-painel-botoes > * { pointer-events: auto; }
 .seu-painel-botoes .hacker-orb { position: relative; z-index: 2; cursor: pointer; touch-action: manipulation; background-image: url('/images/floating-icon.png') !important; background-size: cover; background-position: center; background-repeat: no-repeat; color: transparent; }
 .seu-painel-botoes .hacker-orb:active { cursor: pointer; }
-.seu-painel-botoes .hacker-floating-menu { max-width: min(340px, calc(100vw - 32px)); gap: 0.3rem; padding: 0.4rem; background: rgba(4, 12, 8, 0.42) !important; border-color: rgba(0, 255, 102, 0.28) !important; backdrop-filter: blur(5px); }
+.seu-painel-botoes .hacker-floating-menu { width: max-content !important; max-width: min(340px, calc(100vw - 32px)); gap: 0.3rem; padding: 0.4rem; background: rgba(4, 12, 8, 0.42) !important; border-color: rgba(0, 255, 102, 0.28) !important; backdrop-filter: blur(5px); }
 .seu-painel-botoes .hacker-floating-menu button { min-height: 2.15rem; padding: 0.45rem 0.7rem; font-size: 0.7rem; background: rgba(5, 14, 9, 0.42) !important; }
 .seu-painel-botoes .hacker-floating-menu button:hover { background: rgba(0, 255, 102, 0.14) !important; }
 @supports not (overflow: clip) { main { overflow-x: hidden; } }
