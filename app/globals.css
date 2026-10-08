@@ -207,3 +207,4 @@ textarea[readonly]::-webkit-scrollbar { display: none; }
 }
 
 .buscar-ofertas-btn { color: #000000 !important; text-shadow: none !important; }
+.dark main > div > section .buscar-ofertas-btn { color: #000000 !important; text-shadow: none !important; }
