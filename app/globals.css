@@ -205,3 +205,5 @@ textarea[readonly]::-webkit-scrollbar { display: none; }
     @apply bg-background text-foreground;
   }
 }
+
+.buscar-ofertas-btn { color: #000000 !important; text-shadow: none !important; }
