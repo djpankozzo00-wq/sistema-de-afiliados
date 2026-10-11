@@ -153,7 +153,7 @@ export function AdminDashboard({ simulation = false, clientMode = false, groupCo
     setAutoRefresh(false)
     setManualSearching(true)
     setLoading(true)
-    setNotice('Busca em lote iniciada: até 4 termos, 10 páginas por termo e 50 itens por página.')
+    setNotice('Busca em lote iniciada: até 4 termos, 3 páginas por termo e 50 itens por página.')
     try {
       const response = await fetch('/api/shopee-live-deals', {
         method: 'POST',
@@ -164,7 +164,7 @@ export function AdminDashboard({ simulation = false, clientMode = false, groupCo
           mode: 'all',
           keyword: '',
           limit: 50,
-          pages: 10,
+          pages: 3,
           terms: ['eletrônicos', 'casa', 'promoção', 'achadinhos'],
           bulkSearch: true,
         }),
@@ -185,7 +185,7 @@ export function AdminDashboard({ simulation = false, clientMode = false, groupCo
         setSeenIds((current) => [...new Set([...current, ...fresh.map((item) => item.id)])])
       }
       setOfferHistory((current) => [...received, ...current.filter((old) => !received.some((item) => item.id === old.id))])
-      setNotice(`Busca em lote concluída: ${received.length} ofertas recebidas da API, ${fresh.length} novas adicionadas. Foram consultados até 10 páginas por termo, com limite de 50 itens por página.`)
+      setNotice(`Busca em lote concluída: ${received.length} ofertas recebidas da API, ${fresh.length} novas adicionadas. Foram consultadas até 3 páginas por termo, com limite de 50 itens por página.`)
       window.setTimeout(() => document.getElementById('ofertas-encontradas')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 350)
     } catch (error) {
       setNotice(error instanceof Error ? error.message : 'Não foi possível concluir a busca em lote.')
