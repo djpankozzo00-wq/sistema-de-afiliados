@@ -64,7 +64,7 @@ export async function POST(request: Request) {
     const endpoint = process.env.SHOPEE_AFFILIATE_API_URL || 'https://open-api.affiliate.shopee.com.br/graphql'
     const escapeGraphQL = (value: string) => value.replace(/\\\\/g, '\\\\\\\\').replace(/"/g, '\\\"').replace(/\n/g, ' ')
     const pageLimit = body.bulkSearch ? Math.min(50, Math.max(1, Number(body.limit) || 50)) : Math.min(50, requestedLimit)
-    const pageCount = body.bulkSearch ? Math.min(10, Math.max(1, Number(body.pages) || 10)) : 1
+    const pageCount = body.bulkSearch ? Math.min(3, Math.max(1, Number(body.pages) || 3)) : 1
     const terms = body.bulkSearch
       ? [...new Set((Array.isArray(body.terms) ? body.terms : ['eletrônicos', 'casa', 'promoção', 'achadinhos']).map((term) => String(term).trim()).filter(Boolean))]
       : [keyword]
