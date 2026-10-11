@@ -1,6 +1,8 @@
 import { createHash } from 'node:crypto'
 import { NextResponse } from 'next/server'
 
+export const maxDuration = 60
+
 type Credentials = { appId?: string; secretKey?: string; affiliateId?: string }
 
 function sign(appId: string, secretKey: string, payload: string, timestamp: number) {
