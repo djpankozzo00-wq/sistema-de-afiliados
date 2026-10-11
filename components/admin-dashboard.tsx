@@ -175,6 +175,11 @@ export function AdminDashboard({ simulation = false, clientMode = false, groupCo
       const known = new Set([...productsRef.current.map((item) => item.id), ...seenIds])
       const savedHidden = (() => { try { return JSON.parse(window.localStorage.getItem('shopee-hidden-offers') || '{}') as Record<string, number> } catch { return {} } })()
       const fresh = received.filter((item) => !known.has(item.id) && !(savedHidden[item.id] > Date.now()) && Number(item.dealPrice) > 0)
+      // Embaralha a ordem das novas ofertas para misturar categorias em vez de exibi-las por sequência de busca.
+      for (let i = fresh.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1))
+        ;[fresh[i], fresh[j]] = [fresh[j], fresh[i]]
+      }
       if (fresh.length) {
         try {
           const created = JSON.parse(window.localStorage.getItem('shopee-offer-created') || '{}')
