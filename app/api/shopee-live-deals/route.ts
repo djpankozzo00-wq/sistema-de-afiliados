@@ -67,7 +67,6 @@ export async function POST(request: Request) {
       ? [...new Set((Array.isArray(body.terms) ? body.terms : ['eletrônicos', 'casa', 'promoção', 'achadinhos']).map((term) => String(term).trim()).filter(Boolean))]
       : [keyword]
     const allNodes: Array<{ itemId?: string | number; productName?: string; imageUrl?: string; priceMin?: number; priceMax?: number; priceDiscountRate?: number; ratingStar?: number; sales?: number; offerLink?: string; productLink?: string; commissionRate?: number }> = []
-    let requestCount = 0
     for (const term of terms) {
       for (let pageNumber = 1; pageNumber <= pageCount; pageNumber += 1) {
         const escapedKeyword = escapeGraphQL(term)
@@ -81,7 +80,6 @@ export async function POST(request: Request) {
         // Uma página vazia encerra a paginação deste termo, evitando loops.
         if (nodes.length === 0) break
         allNodes.push(...nodes)
-        requestCount += 1
         if (body.bulkSearch && (pageNumber < pageCount || term !== terms[terms.length - 1])) {
           await new Promise((resolve) => setTimeout(resolve, 1100))
         }
