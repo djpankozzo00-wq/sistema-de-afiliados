@@ -43,7 +43,7 @@ ${url}`
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json() as { credentials?: Credentials; refreshKey?: number; mode?: string; keyword?: string; limit?: number; manualSearch?: boolean }
+    const body = await request.json() as { credentials?: Credentials; refreshKey?: number; mode?: string; keyword?: string; limit?: number; manualSearch?: boolean; bulkSearch?: boolean; terms?: string[]; pages?: number }
     const credentials = body.credentials || {}
     const refreshKey = Number.isFinite(body.refreshKey) ? Math.max(0, Number(body.refreshKey)) : 0
     const mode = body.mode || 'all'
@@ -60,14 +60,34 @@ export async function POST(request: Request) {
     }
 
     const endpoint = process.env.SHOPEE_AFFILIATE_API_URL || 'https://open-api.affiliate.shopee.com.br/graphql'
-    const escapedKeyword = keyword.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
-    const query = `query { productOfferV2(keyword: "${escapedKeyword}", listType: ${listType}, sortType: ${sortType}, page: ${page}, limit: ${requestedLimit}) { nodes { itemId productName productLink offerLink imageUrl priceMin priceMax priceDiscountRate sales ratingStar commissionRate } } }`
-    const payload = JSON.stringify({ query })
-    const timestamp = Math.floor(Date.now() / 1000)
-    const response = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `SHA256 Credential=${appId}, Timestamp=${timestamp}, Signature=${sign(appId, secretKey, payload, timestamp)}` }, body: payload, cache: 'no-store' })
-    const data = await response.json() as { data?: { productOfferV2?: { nodes?: Array<{ itemId?: string | number; productName?: string; imageUrl?: string; priceMin?: number; priceMax?: number; priceDiscountRate?: number; ratingStar?: number; sales?: number; offerLink?: string; productLink?: string }> } }; errors?: Array<{ message?: string }> }
-    if (!response.ok || data.errors) return NextResponse.json({ products: [], error: data.errors?.[0]?.message || 'A Shopee recusou a consulta. Verifique App ID, Secret Key e o endpoint da sua conta.' }, { status: 502 })
-    const nodes = data.data?.productOfferV2?.nodes || []
+    const escapeGraphQL = (value: string) => value.replace(/\\\\/g, '\\\\\\\\').replace(/"/g, '\\\"').replace(/\n/g, ' ')
+    const pageLimit = body.bulkSearch ? Math.min(50, Math.max(1, Number(body.limit) || 50)) : Math.min(50, requestedLimit)
+    const pageCount = body.bulkSearch ? Math.min(10, Math.max(1, Number(body.pages) || 10)) : 1
+    const terms = body.bulkSearch
+      ? [...new Set((Array.isArray(body.terms) ? body.terms : ['eletrônicos', 'casa', 'promoção', 'achadinhos']).map((term) => String(term).trim()).filter(Boolean))]
+      : [keyword]
+    const allNodes: Array<{ itemId?: string | number; productName?: string; imageUrl?: string; priceMin?: number; priceMax?: number; priceDiscountRate?: number; ratingStar?: number; sales?: number; offerLink?: string; productLink?: string; commissionRate?: number }> = []
+    let requestCount = 0
+    for (const term of terms) {
+      for (let pageNumber = 1; pageNumber <= pageCount; pageNumber += 1) {
+        const escapedKeyword = escapeGraphQL(term)
+        const query = `query { productOfferV2(keyword: "${escapedKeyword}", listType: ${listType}, sortType: ${sortType}, page: ${body.bulkSearch ? pageNumber : page}, limit: ${pageLimit}) { nodes { itemId productName productLink offerLink imageUrl priceMin priceMax priceDiscountRate sales ratingStar commissionRate } } }`
+        const payload = JSON.stringify({ query })
+        const timestamp = Math.floor(Date.now() / 1000)
+        const response = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `SHA256 Credential=${appId}, Timestamp=${timestamp}, Signature=${sign(appId, secretKey, payload, timestamp)}` }, body: payload, cache: 'no-store' })
+        const data = await response.json() as { data?: { productOfferV2?: { nodes?: Array<{ itemId?: string | number; productName?: string; imageUrl?: string; priceMin?: number; priceMax?: number; priceDiscountRate?: number; ratingStar?: number; sales?: number; offerLink?: string; productLink?: string; commissionRate?: number }> } }; errors?: Array<{ message?: string }> }
+        if (!response.ok || data.errors) return NextResponse.json({ products: [], error: data.errors?.[0]?.message || 'A Shopee recusou a consulta. Verifique App ID, Secret Key e o endpoint da sua conta.' }, { status: 502 })
+        const nodes = data.data?.productOfferV2?.nodes || []
+        // Uma página vazia encerra a paginação deste termo, evitando loops.
+        if (nodes.length === 0) break
+        allNodes.push(...nodes)
+        requestCount += 1
+        if (body.bulkSearch && (pageNumber < pageCount || term !== terms[terms.length - 1])) {
+          await new Promise((resolve) => setTimeout(resolve, 1100))
+        }
+      }
+    }
+    const nodes = [...new Map(allNodes.map((item, index) => [String(item.itemId || `${item.productName || 'offer'}-${index}`), item])).values()]
     const products = nodes.map((item, index) => {
       const dealPrice = Number(item.priceMin || 0)
       const discountRate = Number(item.priceDiscountRate || 0)
