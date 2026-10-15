@@ -51,7 +51,7 @@ export async function POST(request: Request) {
     const mode = body.mode || 'all'
     const keyword = typeof body.keyword === 'string' ? body.keyword.trim().slice(0, 100) : ''
     const requestedLimit = Math.max(1, Number(body.limit) || 50)
-    const page = body.manualSearch && keyword ? 1 : refreshKey + 1
+    const page = body.manualSearch && keyword ? Math.max(1, refreshKey) : refreshKey + 1
     const sortType = mode === 'commission-high' ? 4 : mode === 'commission-low' ? 5 : mode === 'best-selling' ? 2 : mode === 'week' || mode === 'month' ? 2 : 1
     const listType = mode === 'week' || mode === 'month' ? 1 : 2
     const secretKey = !credentials.secretKey || credentials.secretKey === 'process.env.API_KEY' ? process.env.API_KEY || '' : credentials.secretKey
@@ -68,15 +68,15 @@ export async function POST(request: Request) {
     const terms = body.bulkSearch
       ? [...new Set((Array.isArray(body.terms) ? body.terms : ['eletrônicos', 'casa', 'promoção', 'achadinhos']).map((term) => String(term).trim()).filter(Boolean))]
       : [keyword]
-    const allNodes: Array<{ itemId?: string | number; productName?: string; imageUrl?: string; priceMin?: number; priceMax?: number; priceDiscountRate?: number; ratingStar?: number; sales?: number; offerLink?: string; productLink?: string; commissionRate?: number }> = []
+    const allNodes: Array<{ itemId?: string | number; productName?: string; shopName?: string; shopType?: number[]; imageUrl?: string; priceMin?: number; priceMax?: number; priceDiscountRate?: number; ratingStar?: number; sales?: number; offerLink?: string; productLink?: string; commissionRate?: number }> = []
     for (const term of terms) {
       for (let pageNumber = 1; pageNumber <= pageCount; pageNumber += 1) {
         const escapedKeyword = escapeGraphQL(term)
-        const query = `query { productOfferV2(keyword: "${escapedKeyword}", listType: ${listType}, sortType: ${sortType}, page: ${body.bulkSearch ? pageNumber : page}, limit: ${pageLimit}) { nodes { itemId productName productLink offerLink imageUrl priceMin priceMax priceDiscountRate sales ratingStar commissionRate } } }`
+        const query = `query { productOfferV2(keyword: "${escapedKeyword}", listType: ${listType}, sortType: ${sortType}, page: ${body.bulkSearch ? pageNumber : page}, limit: ${pageLimit}) { nodes { itemId productName shopName shopType productLink offerLink imageUrl priceMin priceMax priceDiscountRate sales ratingStar commissionRate } } }`
         const payload = JSON.stringify({ query })
         const timestamp = Math.floor(Date.now() / 1000)
         const response = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `SHA256 Credential=${appId}, Timestamp=${timestamp}, Signature=${sign(appId, secretKey, payload, timestamp)}` }, body: payload, cache: 'no-store' })
-        const data = await response.json() as { data?: { productOfferV2?: { nodes?: Array<{ itemId?: string | number; productName?: string; imageUrl?: string; priceMin?: number; priceMax?: number; priceDiscountRate?: number; ratingStar?: number; sales?: number; offerLink?: string; productLink?: string; commissionRate?: number }> } }; errors?: Array<{ message?: string }> }
+        const data = await response.json() as { data?: { productOfferV2?: { nodes?: Array<{ itemId?: string | number; productName?: string; shopName?: string; shopType?: number[]; imageUrl?: string; priceMin?: number; priceMax?: number; priceDiscountRate?: number; ratingStar?: number; sales?: number; offerLink?: string; productLink?: string; commissionRate?: number }> } }; errors?: Array<{ message?: string }> }
         if (!response.ok || data.errors) return NextResponse.json({ products: [], error: data.errors?.[0]?.message || 'A Shopee recusou a consulta. Verifique App ID, Secret Key e o endpoint da sua conta.' }, { status: 502 })
         const nodes = data.data?.productOfferV2?.nodes || []
         // Uma página vazia encerra a paginação deste termo, evitando loops.
@@ -93,12 +93,19 @@ export async function POST(request: Request) {
       const discountRate = Number(item.priceDiscountRate || 0)
       const originalPrice = discountRate > 0 && discountRate < 100 ? dealPrice / (1 - discountRate / 100) : Number(item.priceMax || dealPrice || 0)
       const affiliateUrl = item.offerLink || item.productLink || `https://shope.ee/${affiliateId}/${item.itemId || index}`
-      return { id: String(item.itemId || `offer-${index}`), title: item.productName || 'Oferta Shopee', imageUrl: item.imageUrl || '', originalPrice, dealPrice, rating: Number(item.ratingStar || 0), commissionRate: Number(item.commissionRate || 0), stock: Number(item.sales || 0), affiliateUrl, caption: caption(item.productName || 'Oferta Shopee', dealPrice, originalPrice, affiliateUrl) }
+      return { id: String(item.itemId || `offer-${index}`), title: item.productName || 'Oferta Shopee', shopName: item.shopName || '', shopType: item.shopType || [], imageUrl: item.imageUrl || '', originalPrice, dealPrice, rating: Number(item.ratingStar || 0), commissionRate: Number(item.commissionRate || 0), stock: Number(item.sales || 0), affiliateUrl, caption: caption(item.productName || 'Oferta Shopee', dealPrice, originalPrice, affiliateUrl) }
     }).filter((item) => item.dealPrice > 0).filter((item) => {
       const origin = body.origin || 'all'
       if (origin === 'all') return true
-      const internationalClues = /importad[oa]s?|internacional|envio internacional|origem\s*[:：]?\s*(china|exterior)|china|eua|estados unidos|global version/i.test(item.title)
-      return origin === 'international' ? internationalClues : !internationalClues
+      const combined = item.title + ' ' + (item.shopName || '')
+      const internationalClues = /importad[oa]s?|internacional|envio internacional|china|jap[aã]o|japan|eua|estados unidos|global version|overseas|cross.?border|海外/i.test(combined)
+      const nationalClues = /brasil|brasileir[oa]|nacional|oficial brasil|loja oficial|envio nacional|estoque nacional|s[aã]o paulo|santa catarina|minas gerais|rio de janeiro|paran[aá]|bahia/i.test(combined)
+      if (origin === 'international') return internationalClues
+      return !internationalClues || nationalClues
+    }).sort((a, b) => {
+      if (body.origin !== 'national') return 0
+      const clues = (item: typeof a) => /brasil|brasileir[oa]|nacional|oficial brasil|loja oficial|envio nacional|estoque nacional|s[aã]o paulo|santa catarina|minas gerais|rio de janeiro|paran[aá]|bahia/i.test(item.title + ' ' + (item.shopName || '')) ? 1 : 0
+      return clues(b) - clues(a) || b.stock - a.stock
     })
     return NextResponse.json({ products, refreshedAt: new Date().toISOString() })
   } catch (error) {
