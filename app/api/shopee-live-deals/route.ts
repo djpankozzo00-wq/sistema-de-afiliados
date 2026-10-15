@@ -45,7 +45,7 @@ ${url}`
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json() as { credentials?: Credentials; refreshKey?: number; mode?: string; keyword?: string; limit?: number; manualSearch?: boolean; bulkSearch?: boolean; terms?: string[]; pages?: number }
+    const body = await request.json() as { credentials?: Credentials; refreshKey?: number; mode?: string; origin?: string; keyword?: string; limit?: number; manualSearch?: boolean; bulkSearch?: boolean; terms?: string[]; pages?: number }
     const credentials = body.credentials || {}
     const refreshKey = Number.isFinite(body.refreshKey) ? Math.max(0, Number(body.refreshKey)) : 0
     const mode = body.mode || 'all'
@@ -94,7 +94,12 @@ export async function POST(request: Request) {
       const originalPrice = discountRate > 0 && discountRate < 100 ? dealPrice / (1 - discountRate / 100) : Number(item.priceMax || dealPrice || 0)
       const affiliateUrl = item.offerLink || item.productLink || `https://shope.ee/${affiliateId}/${item.itemId || index}`
       return { id: String(item.itemId || `offer-${index}`), title: item.productName || 'Oferta Shopee', imageUrl: item.imageUrl || '', originalPrice, dealPrice, rating: Number(item.ratingStar || 0), commissionRate: Number(item.commissionRate || 0), stock: Number(item.sales || 0), affiliateUrl, caption: caption(item.productName || 'Oferta Shopee', dealPrice, originalPrice, affiliateUrl) }
-    }).filter((item) => item.dealPrice > 0)
+    }).filter((item) => item.dealPrice > 0).filter((item) => {
+      const origin = body.origin || 'all'
+      if (origin === 'all') return true
+      const internationalClues = /importad[oa]s?|internacional|envio internacional|origem\s*[:：]?\s*(china|exterior)|china|eua|estados unidos|global version/i.test(item.title)
+      return origin === 'international' ? internationalClues : !internationalClues
+    })
     return NextResponse.json({ products, refreshedAt: new Date().toISOString() })
   } catch (error) {
     return NextResponse.json({ products: [], error: error instanceof Error ? error.message : 'Falha inesperada ao consultar a Shopee.' }, { status: 500 })
