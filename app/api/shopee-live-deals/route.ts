@@ -99,13 +99,14 @@ export async function POST(request: Request) {
       if (origin === 'all') return true
       const combined = item.title + ' ' + (item.shopName || '')
       const internationalClues = /importad[oa]s?|internacional|envio internacional|china|jap[aã]o|japan|eua|estados unidos|global version|overseas|cross.?border|海外/i.test(combined)
-      const nationalClues = /brasil|brasileir[oa]|nacional|oficial brasil|loja oficial|envio nacional|estoque nacional|s[aã]o paulo|santa catarina|minas gerais|rio de janeiro|paran[aá]|bahia/i.test(combined)
-      if (origin === 'international') return internationalClues
-      return !internationalClues || nationalClues
+      const nationalClues = /brasil|brasileir[oa]|nacional|oficial brasil|loja oficial|envio nacional|estoque nacional|s[aã]o paulo|santa catarina|minas gerais|rio de janeiro|paran[aá]|bahia|\bbr\b|\bbrasil\b/i.test(combined)
+      // A origem não vem como campo confiável da API; só classifica quando há indício explícito.
+      if (origin === 'international') return internationalClues && !nationalClues
+      if (origin === 'national') return nationalClues && !internationalClues
+      return true
     }).sort((a, b) => {
       if (body.origin !== 'national') return 0
-      const clues = (item: typeof a) => /brasil|brasileir[oa]|nacional|oficial brasil|loja oficial|envio nacional|estoque nacional|s[aã]o paulo|santa catarina|minas gerais|rio de janeiro|paran[aá]|bahia/i.test(item.title + ' ' + (item.shopName || '')) ? 1 : 0
-      return clues(b) - clues(a) || b.stock - a.stock
+      return b.stock - a.stock
     })
     return NextResponse.json({ products, refreshedAt: new Date().toISOString() })
   } catch (error) {
