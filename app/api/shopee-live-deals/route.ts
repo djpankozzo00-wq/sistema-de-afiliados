@@ -52,7 +52,7 @@ export async function POST(request: Request) {
     const keyword = typeof body.keyword === 'string' ? body.keyword.trim().slice(0, 100) : ''
     const requestedLimit = Math.max(1, Number(body.limit) || 50)
     const page = body.manualSearch && keyword ? Math.max(1, refreshKey) : refreshKey + 1
-    const sortType = mode === 'commission-high' ? 4 : mode === 'commission-low' ? 5 : mode === 'best-selling' ? 2 : mode === 'week' || mode === 'month' ? 2 : 1
+    const sortType = mode === 'commission-high' ? 4 : mode === 'commission-low' ? 5 : mode === 'best-selling' ? 2 : mode === 'week' || mode === 'month' ? 2 : body.bulkSearch ? 2 : 1
     const listType = mode === 'week' || mode === 'month' ? 1 : 2
     const secretKey = !credentials.secretKey || credentials.secretKey === 'process.env.API_KEY' ? process.env.API_KEY || '' : credentials.secretKey
     const appId = credentials.appId || '18336041241'
@@ -95,16 +95,21 @@ export async function POST(request: Request) {
       const affiliateUrl = item.offerLink || item.productLink || `https://shope.ee/${affiliateId}/${item.itemId || index}`
       return { id: String(item.itemId || `offer-${index}`), title: item.productName || 'Oferta Shopee', shopName: item.shopName || '', shopType: item.shopType || [], imageUrl: item.imageUrl || '', originalPrice, dealPrice, rating: Number(item.ratingStar || 0), commissionRate: Number(item.commissionRate || 0), stock: Number(item.sales || 0), affiliateUrl, caption: caption(item.productName || 'Oferta Shopee', dealPrice, originalPrice, affiliateUrl) }
     }).filter((item) => item.dealPrice > 0).filter((item) => {
-      const origin = body.origin || 'all'
+      const origin = body.bulkSearch ? 'national-priority' : (body.origin || 'all')
       if (origin === 'all') return true
       const combined = item.title + ' ' + (item.shopName || '')
-      const internationalClues = /importad[oa]s?|internacional|envio internacional|china|jap[aã]o|japan|eua|estados unidos|global version|overseas|cross.?border|海外/i.test(combined)
+      const internationalClues = /importad[oa]s?|internacional|envio internacional|china|jap[aã]o|japan|eua|estados unidos|global version|overseas|cross.?border|海外|vers[aã]o global/i.test(combined)
       const nationalClues = /brasil|brasileir[oa]|nacional|oficial brasil|loja oficial|envio nacional|estoque nacional|s[aã]o paulo|santa catarina|minas gerais|rio de janeiro|paran[aá]|bahia|\bbr\b|\bbrasil\b/i.test(combined)
-      // A origem não vem como campo confiável da API; só classifica quando há indício explícito.
+      // Para a busca em lote, exclui sinais explícitos de importação e prioriza itens com sinais brasileiros.
       if (origin === 'international') return internationalClues && !nationalClues
       if (origin === 'national') return nationalClues && !internationalClues
+      if (origin === 'national-priority') return !internationalClues
       return true
     }).sort((a, b) => {
+      if (body.bulkSearch) {
+        const nationalScore = (item: typeof a) => /brasil|brasileir[oa]|nacional|oficial brasil|loja oficial|envio nacional|estoque nacional|s[aã]o paulo|santa catarina|minas gerais|rio de janeiro|paran[aá]|bahia|\bbr\b|\bbrasil\b/i.test(item.title + ' ' + (item.shopName || '')) ? 1 : 0
+        return nationalScore(b) - nationalScore(a) || b.stock - a.stock
+      }
       if (body.origin !== 'national') return 0
       return b.stock - a.stock
     })
