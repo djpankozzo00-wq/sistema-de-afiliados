@@ -156,7 +156,7 @@ export function AdminDashboard({ simulation = false, clientMode = false, groupCo
     setAutoRefresh(false)
     setManualSearching(true)
     setLoading(true)
-    setNotice('Busca iniciada: procurando ofertas em 10 categorias diferentes para misturar os tipos de produto.')
+    setNotice('Buscando os mais vendidos, priorizando sinais de lojas nacionais e evitando produtos com indicação explícita de importação...')
     try {
       const response = await fetch('/api/shopee-live-deals', {
         method: 'POST',
@@ -164,7 +164,7 @@ export function AdminDashboard({ simulation = false, clientMode = false, groupCo
         body: JSON.stringify({
           credentials,
           refreshKey: readSavedRefreshKey(0),
-          mode: 'all',
+          mode: 'best-selling',
           keyword: '',
           limit: 50,
           pages: 2,
