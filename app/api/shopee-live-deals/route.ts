@@ -86,7 +86,7 @@ export async function POST(request: Request) {
             response = await fetch(endpoint, { method: 'POST', headers: requestHeaders, body: payload, cache: 'no-store' })
             data = await response.json() as typeof data
             lastError = data.errors?.[0]?.message || ''
-            const temporarySystemError = /error\\s*\\[?10000\\]?|system error/i.test(lastError)
+            const temporarySystemError = /error\s*\[?10000\]?|system error/i.test(lastError)
             if (response.ok && !data.errors) break
             if (!temporarySystemError || attempt === 1) {
               return NextResponse.json({ products: [], error: temporarySystemError
