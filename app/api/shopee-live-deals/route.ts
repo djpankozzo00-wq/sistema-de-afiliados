@@ -75,9 +75,31 @@ export async function POST(request: Request) {
         const query = `query { productOfferV2(keyword: "${escapedKeyword}", listType: ${listType}, sortType: ${sortType}, page: ${body.bulkSearch ? pageNumber : page}, limit: ${pageLimit}) { nodes { itemId productName shopName shopType productLink offerLink imageUrl priceMin priceMax priceDiscountRate sales ratingStar commissionRate } } }`
         const payload = JSON.stringify({ query })
         const timestamp = Math.floor(Date.now() / 1000)
-        const response = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `SHA256 Credential=${appId}, Timestamp=${timestamp}, Signature=${sign(appId, secretKey, payload, timestamp)}` }, body: payload, cache: 'no-store' })
-        const data = await response.json() as { data?: { productOfferV2?: { nodes?: Array<{ itemId?: string | number; productName?: string; shopName?: string; shopType?: number[]; imageUrl?: string; priceMin?: number; priceMax?: number; priceDiscountRate?: number; ratingStar?: number; sales?: number; offerLink?: string; productLink?: string; commissionRate?: number }> } }; errors?: Array<{ message?: string }> }
-        if (!response.ok || data.errors) return NextResponse.json({ products: [], error: data.errors?.[0]?.message || 'A Shopee recusou a consulta. Verifique App ID, Secret Key e o endpoint da sua conta.' }, { status: 502 })
+        const requestHeaders = { 'Content-Type': 'application/json', 'Authorization': `SHA256 Credential=${appId}, Timestamp=${timestamp}, Signature=${sign(appId, secretKey, payload, timestamp)}` }
+        let response: Response | null = null
+        let data: { data?: { productOfferV2?: { nodes?: Array<{ itemId?: string | number; productName?: string; shopName?: string; shopType?: number[]; imageUrl?: string; priceMin?: number; priceMax?: number; priceDiscountRate?: number; ratingStar?: number; sales?: number; offerLink?: string; productLink?: string; commissionRate?: number }> } }; errors?: Array<{ message?: string }> } = {}
+        let lastError = ''
+        // A Shopee pode responder temporariamente com error [10000]: System Error.
+        // Refaz uma vez a mesma consulta antes de devolver a falha ao painel.
+        for (let attempt = 0; attempt < 2; attempt += 1) {
+          try {
+            response = await fetch(endpoint, { method: 'POST', headers: requestHeaders, body: payload, cache: 'no-store' })
+            data = await response.json() as typeof data
+            lastError = data.errors?.[0]?.message || ''
+            const temporarySystemError = /error\\s*\\[?10000\\]?|system error/i.test(lastError)
+            if (response.ok && !data.errors) break
+            if (!temporarySystemError || attempt === 1) {
+              return NextResponse.json({ products: [], error: temporarySystemError
+                ? 'A Shopee retornou um erro temporário (10000) mesmo após uma nova tentativa. Aguarde alguns instantes e tente novamente. Se persistir, confira se a API de afiliados está ativa para este App ID.'
+                : lastError || 'A Shopee recusou a consulta. Verifique App ID, Secret Key e o endpoint da sua conta.' }, { status: 502 })
+            }
+          } catch (error) {
+            lastError = error instanceof Error ? error.message : 'Falha de conexão com a Shopee.'
+            if (attempt === 1) return NextResponse.json({ products: [], error: 'Não foi possível conectar à API da Shopee após uma nova tentativa. Tente novamente em instantes.' }, { status: 502 })
+          }
+          await new Promise((resolve) => setTimeout(resolve, 900))
+        }
+        if (!response?.ok || data.errors) return NextResponse.json({ products: [], error: lastError || 'A Shopee não concluiu a consulta. Tente novamente.' }, { status: 502 })
         const nodes = data.data?.productOfferV2?.nodes || []
         // Uma página vazia encerra a paginação deste termo, evitando loops.
         if (nodes.length === 0) break
