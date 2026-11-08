@@ -84,7 +84,13 @@ export async function POST(request: Request) {
         for (let attempt = 0; attempt < 2; attempt += 1) {
           try {
             response = await fetch(endpoint, { method: 'POST', headers: requestHeaders, body: payload, cache: 'no-store' })
-            data = await response.json() as typeof data
+            const rawBody = await response.text()
+            try { data = JSON.parse(rawBody) as typeof data } catch {
+              lastError = `Resposta não JSON da Shopee (HTTP ${response.status}): ${rawBody.slice(0, 180)}`
+              if (attempt === 1) return NextResponse.json({ products: [], error: 'A Shopee retornou uma resposta inválida duas vezes. Isso pode ser instabilidade temporária da API. Tente novamente em alguns instantes.' }, { status: 502 })
+              await new Promise((resolve) => setTimeout(resolve, 900))
+              continue
+            }
             lastError = data.errors?.[0]?.message || ''
             const temporarySystemError = /error\s*\[?10000\]?|system error/i.test(lastError)
             if (response.ok && !data.errors) break
