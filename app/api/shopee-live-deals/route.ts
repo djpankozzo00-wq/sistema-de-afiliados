@@ -54,7 +54,7 @@ export async function POST(request: Request) {
     const page = body.manualSearch && keyword ? Math.max(1, refreshKey) : refreshKey + 1
     const sortType = mode === 'commission-high' || mode === 'commission-low' ? 5 : mode === 'best-selling' || mode === 'week' || mode === 'month' || body.bulkSearch ? 2 : 1
     // listType 0 (recomendados) é a opção mais compatível para a consulta base.
-    const listType = 0
+    const listType = 2
     const secretKey = !credentials.secretKey || credentials.secretKey === 'process.env.API_KEY' ? process.env.API_KEY || '' : credentials.secretKey
     const appId = credentials.appId || '18336041241'
     const affiliateId = credentials.affiliateId || '18336041241'
@@ -73,7 +73,7 @@ export async function POST(request: Request) {
     for (const term of terms) {
       for (let pageNumber = 1; pageNumber <= pageCount; pageNumber += 1) {
         const escapedKeyword = escapeGraphQL(term)
-        const query = `query { productOfferV2(keyword: "${escapedKeyword}", listType: ${listType}, sortType: ${sortType}, page: ${body.bulkSearch ? pageNumber : page}, limit: ${pageLimit}) { nodes { itemId productName productLink offerLink imageUrl priceMin priceMax priceDiscountRate sales ratingStar commissionRate shopId shopName shopType sellerCommissionRate shopeeCommissionRate commission } } }`
+        const query = `query { productOfferV2(keyword: "${escapedKeyword}", listType: ${listType}, sortType: ${sortType}, page: ${body.bulkSearch ? pageNumber : page}, limit: ${pageLimit}) { nodes { itemId productName shopName shopType imageUrl priceMin priceMax priceDiscountRate ratingStar sales offerLink productLink commissionRate } } }`
         const payload = JSON.stringify({ query })
         const timestamp = Math.floor(Date.now() / 1000)
         const requestHeaders = { 'Content-Type': 'application/json', 'Authorization': `SHA256 Credential=${appId}, Timestamp=${timestamp}, Signature=${sign(appId, secretKey, payload, timestamp)}` }
