@@ -70,6 +70,7 @@ export async function POST(request: Request) {
       ? [...new Set((Array.isArray(body.terms) ? body.terms : ['eletrônicos', 'casa', 'promoção', 'achadinhos']).map((term) => String(term).trim()).filter(Boolean))]
       : [keyword]
     const allNodes: Array<{ itemId?: string | number; productName?: string; shopName?: string; shopType?: number[]; imageUrl?: string; priceMin?: number; priceMax?: number; priceDiscountRate?: number; ratingStar?: number; sales?: number; offerLink?: string; productLink?: string; commissionRate?: number }> = []
+    const failedTerms: string[] = []
     for (const term of terms) {
       for (let pageNumber = 1; pageNumber <= pageCount; pageNumber += 1) {
         const escapedKeyword = escapeGraphQL(term)
@@ -96,6 +97,10 @@ export async function POST(request: Request) {
             const temporarySystemError = /error\s*\[?10000\]?|system error/i.test(lastError)
             if (response.ok && !data.errors) break
             if (!temporarySystemError || attempt === 2) {
+              if (body.bulkSearch && temporarySystemError) {
+                lastError = `erro 10000: ${lastError || 'System Error'}`
+                break
+              }
               return NextResponse.json({ products: [], error: temporarySystemError
                 ? `A Shopee retornou erro 10000. Detalhes recebidos: ${lastError || 'sem mensagem adicional'} (HTTP ${response.status}). A consulta foi repetida 3 vezes sem sucesso.`
                 : `Falha na consulta Shopee: ${lastError || 'sem mensagem de erro'} (HTTP ${response.status}).` }, { status: 502 })
@@ -106,7 +111,13 @@ export async function POST(request: Request) {
           }
           await new Promise((resolve) => setTimeout(resolve, 900))
         }
-        if (!response?.ok || data.errors) return NextResponse.json({ products: [], error: lastError || 'A Shopee não concluiu a consulta. Tente novamente.' }, { status: 502 })
+        if (!response?.ok || data.errors) {
+          if (body.bulkSearch && /error\\s*\\[?10000\\]?|system error/i.test(lastError)) {
+            failedTerms.push(term)
+            break
+          }
+          return NextResponse.json({ products: [], error: lastError || 'A Shopee não concluiu a consulta. Tente novamente.' }, { status: 502 })
+        }
         const nodes = data.data?.productOfferV2?.nodes || []
         // Uma página vazia encerra a paginação deste termo, evitando loops.
         if (nodes.length === 0) break
@@ -142,7 +153,7 @@ export async function POST(request: Request) {
       if (body.origin !== 'national') return 0
       return b.stock - a.stock
     })
-    return NextResponse.json({ products, refreshedAt: new Date().toISOString() })
+    return NextResponse.json({ products, warnings: failedTerms.length ? failedTerms.map((term) => `A categoria “${term}” não respondeu nesta tentativa.`) : [], refreshedAt: new Date().toISOString() })
   } catch (error) {
     return NextResponse.json({ products: [], error: error instanceof Error ? error.message : 'Falha inesperada ao consultar a Shopee.' }, { status: 500 })
   }
