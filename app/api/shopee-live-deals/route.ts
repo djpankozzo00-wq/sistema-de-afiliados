@@ -112,7 +112,7 @@ export async function POST(request: Request) {
           await new Promise((resolve) => setTimeout(resolve, 900))
         }
         if (!response?.ok || data.errors) {
-          if (body.bulkSearch && /error\\s*\\[?10000\\]?|system error/i.test(lastError)) {
+          if (body.bulkSearch && /error\s*\[?10000\]?|system error/i.test(lastError)) {
             failedTerms.push(term)
             break
           }
