@@ -170,7 +170,7 @@ export function AdminDashboard({ simulation = false, clientMode = false, groupCo
           mode: 'best-selling',
           keyword: '',
           limit: 50,
-          pages: 2,
+          pages: 1,
           terms: ['eletrônicos', 'moda feminina', 'moda masculina', 'beleza e maquiagem', 'casa e cozinha', 'acessórios', 'esportes e fitness', 'brinquedos e bebê', 'pet shop', 'ferramentas e automotivo'],
           bulkSearch: true,
         }),
@@ -198,7 +198,8 @@ export function AdminDashboard({ simulation = false, clientMode = false, groupCo
         setSeenIds((current) => [...new Set([...current, ...fresh.map((item) => item.id)])])
       }
       setOfferHistory((current) => [...received, ...current.filter((old) => !received.some((item) => item.id === old.id))])
-      setNotice(`Busca em lote concluída: ${received.length} ofertas recebidas da API, ${fresh.length} novas adicionadas. Foram consultadas até 2 páginas em cada uma de 10 categorias, com limite de 50 itens por página.`)
+      const warningText = Array.isArray(data.warnings) && data.warnings.length ? ` Algumas categorias não responderam: ${data.warnings.map((warning: string) => warning.replace(/^A categoria /, '')).join(', ')}.` : ''
+      setNotice(`Busca em lote concluída: ${received.length} ofertas recebidas da API, ${fresh.length} novas adicionadas. Foi consultada 1 página em cada uma de 10 categorias, com limite de 50 itens por página.${warningText}`)
       window.setTimeout(() => document.getElementById('ofertas-encontradas')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 350)
     } catch (error) {
       setNotice(error instanceof Error ? error.message : 'Não foi possível concluir a busca em lote.')
