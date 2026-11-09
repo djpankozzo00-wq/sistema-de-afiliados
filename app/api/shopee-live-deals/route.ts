@@ -96,8 +96,8 @@ export async function POST(request: Request) {
             if (response.ok && !data.errors) break
             if (!temporarySystemError || attempt === 2) {
               return NextResponse.json({ products: [], error: temporarySystemError
-                ? 'A Shopee retornou um erro temporário (10000) mesmo após uma nova tentativa. Aguarde alguns instantes e tente novamente. Se persistir, confira se a API de afiliados está ativa para este App ID.'
-                : lastError || 'A Shopee recusou a consulta. Verifique App ID, Secret Key e o endpoint da sua conta.' }, { status: 502 })
+                ? `A Shopee retornou erro 10000. Detalhes recebidos: ${lastError || 'sem mensagem adicional'} (HTTP ${response.status}). A consulta foi repetida 3 vezes sem sucesso.`
+                : `Falha na consulta Shopee: ${lastError || 'sem mensagem de erro'} (HTTP ${response.status}).` }, { status: 502 })
             }
           } catch (error) {
             lastError = error instanceof Error ? error.message : 'Falha de conexão com a Shopee.'
