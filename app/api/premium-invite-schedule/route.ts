@@ -52,7 +52,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json() as { botToken?: string; chatId?: string }
     const token = String(body.botToken || '').trim()
-    const chatId = String(body.chatId || '').trim()
+    const chatId = '-1003323444997'
     if (!/^\d{5,}:[A-Za-z0-9_-]{20,}$/.test(token)) {
       return NextResponse.json({ error: 'Token do Bot inválido. Confira as configurações do Telegram.' }, { status: 400 })
     }
