@@ -64,11 +64,14 @@ export async function POST(request: Request) {
       ON CONFLICT (user_id, provider) DO UPDATE
       SET credentials = EXCLUDED.credentials, updated_at = NOW(), enabled = TRUE`)
 
-    await sendInvite(token, chatId)
+    // Grava o destino do agendamento antes do envio imediato. Assim, se o envio falhar,
+    // a próxima execução automática continuará apontando para o Grupo 1 informado no painel.
     await db.execute(sql`INSERT INTO premium_invite_schedule (id, chat_id, enabled, next_run_at, locked_until, updated_at)
       VALUES ('achadinhos-premium', ${chatId}, TRUE, NOW() + INTERVAL '24 hours', NULL, NOW())
       ON CONFLICT (id) DO UPDATE SET chat_id = EXCLUDED.chat_id, enabled = TRUE,
         next_run_at = NOW() + INTERVAL '24 hours', locked_until = NULL, updated_at = NOW()`)
+
+    await sendInvite(token, chatId)
 
     return NextResponse.json({ ok: true, message: 'Convite publicado agora. A próxima publicação ficou programada para o mesmo horário amanhã.' })
   } catch (error) {
