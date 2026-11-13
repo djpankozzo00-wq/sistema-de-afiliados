@@ -8,16 +8,15 @@ export async function POST(request: Request) {
   try {
     const { caption, imageUrl, productId, title, affiliateUrl, chatIds, targetChatIds, forceLink, botToken } = await request.json() as { caption?: string; imageUrl?: string; productId?: string; title?: string; affiliateUrl?: string; chatIds?: string[]; targetChatIds?: string[]; forceLink?: boolean; botToken?: string }
     const token = String(botToken || process.env.TELEGRAM_BOT_TOKEN || '').trim()
-    const defaultChatId = process.env.TELEGRAM_CHAT_ID
+    const defaultChatId = '-1003726473847'
     if (!token) return NextResponse.json({ error: 'Configure TELEGRAM_BOT_TOKEN.' }, { status: 503 })
     if (!caption?.trim()) return NextResponse.json({ error: 'A oferta não possui texto.' }, { status: 400 })
     if (!productId) return NextResponse.json({ error: 'Identificador do produto ausente.' }, { status: 400 })
 
 
-    // Sempre inclui o grupo padrão do ambiente e soma os grupos enviados pelo painel.
-    // Antes, quando chatIds existia, ele substituía TELEGRAM_CHAT_ID e apenas um destino recebia a oferta.
-    const requestedIds = Array.isArray(targetChatIds) && targetChatIds.length ? targetChatIds : [defaultChatId, ...(chatIds || [])]
-    const destinationIds = [...new Set(requestedIds.map((id) => String(id ?? '').trim() === 'default' ? String(defaultChatId || '') : String(id ?? '').trim()).filter(Boolean))]
+    // Todas as ofertas Shopee devem ser publicadas exclusivamente no Grupo 2.
+    // O destino é fixo no servidor para impedir que IDs antigos do painel redirecionem o envio.
+    const destinationIds = [defaultChatId]
     if (!destinationIds.length) return NextResponse.json({ error: 'Configure TELEGRAM_CHAT_ID ou adicione IDs de grupos nas configurações.' }, { status: 503 })
 
     const isAffiliateLinkOffer = forceLink === true || String(productId).startsWith('affiliate-')
