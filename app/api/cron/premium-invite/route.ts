@@ -44,7 +44,7 @@ export async function GET(request: Request) {
       RETURNING chat_id`)
     if (!claimed.rows.length) return NextResponse.json({ ok: true, sent: false, message: 'Nenhuma publicação pendente.' })
 
-    const chatId = String(claimed.rows[0].chat_id || '')
+    const chatId = '-1003323444997'
     const settings = await db.execute(sql`SELECT credentials FROM integration_settings
       WHERE user_id = 'local-admin' AND provider = 'telegram' AND enabled = TRUE LIMIT 1`)
     const credentials = settings.rows[0]?.credentials as { telegramBotToken?: string } | undefined
