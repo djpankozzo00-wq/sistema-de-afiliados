@@ -113,7 +113,7 @@ export function AdminDashboard({ simulation = false, clientMode = false, groupCo
     }
     setApiEnabled(enabled)
     const savedIds = getTelegramChatIds(JSON.parse(window.localStorage.getItem('shopee-affiliate-credentials') || '{}').telegramChatIds || '') || []
-    setTelegramDestinations((savedIds.includes('-1003726473847') && savedIds.length === 1 ? ['default', '-1003726473847'] : savedIds).filter((destination) => !/^(todos|todos os grupos)$/i.test(destination.trim())))
+    setTelegramDestinations(['-1003726473847'])
   }, [])
   useEffect(() => { productsRef.current = products }, [products])
   useEffect(() => () => { manualSearchStop.current = true }, [])
