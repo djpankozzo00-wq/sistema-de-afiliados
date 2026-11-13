@@ -21,23 +21,31 @@ async function ensureScheduleTable() {
 
 async function sendInvite(token: string, chatId: string) {
   const base = `https://api.telegram.org/bot${token}`
-  let response = await fetch(`${base}/sendPhoto`, {
+  const chatResponse = await fetch(`${base}/getChat?chat_id=${encodeURIComponent(chatId)}`, { cache: 'no-store' })
+  const chatResult = await chatResponse.json() as { ok?: boolean; description?: string; result?: { id?: number; title?: string; type?: string } }
+  if (!chatResponse.ok || !chatResult.ok || String(chatResult.result?.id) !== chatId) {
+    throw new Error(`O bot não conseguiu validar o Grupo 1 (${chatId}). ${chatResult.description || 'Confira se o token pertence ao bot que está no grupo.'}`)
+  }
+
+  const photoResponse = await fetch(`${base}/sendPhoto`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ chat_id: chatId, photo: IMAGE_URL, caption: CAPTION }),
     cache: 'no-store',
   })
-  let result = await response.json() as { ok?: boolean; description?: string }
-  if (!response.ok || !result.ok) {
-    response = await fetch(`${base}/sendMessage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: chatId, text: CAPTION }),
-      cache: 'no-store',
-    })
-    result = await response.json() as { ok?: boolean; description?: string }
+  const photoResult = await photoResponse.json() as { ok?: boolean; description?: string }
+  if (photoResponse.ok && photoResult.ok) return
+
+  const textResponse = await fetch(`${base}/sendMessage`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ chat_id: chatId, text: CAPTION }),
+    cache: 'no-store',
+  })
+  const textResult = await textResponse.json() as { ok?: boolean; description?: string }
+  if (!textResponse.ok || !textResult.ok) {
+    throw new Error(`O Telegram reconheceu o grupo "${chatResult.result?.title || chatId}", mas recusou a publicação em texto: ${textResult.description || 'erro desconhecido'}. Tentativa com foto: ${photoResult.description || 'sem detalhe'}.`)
   }
-  if (!response.ok || !result.ok) throw new Error(result.description || 'O Telegram recusou o envio.')
 }
 
 export async function POST(request: Request) {
