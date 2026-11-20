@@ -34,7 +34,7 @@ export function AdminDashboard({ simulation = false, clientMode = false, groupCo
   const [history7d, setHistory7d] = useState<{ productId: string; title: string; chatId?: string; sentAt?: string }[]>([])
   const [sessionSentCount, setSessionSentCount] = useState(0)
   const [sendPauseCountdown, setSendPauseCountdown] = useState<number | null>(null)
-  const waitForSendPause = async (shouldStop: () => boolean) => { const endsAt = Date.now() + 20000; while (Date.now() < endsAt) { if (shouldStop()) { setSendPauseCountdown(null); return false } setSendPauseCountdown(Math.max(1, Math.ceil((endsAt - Date.now()) / 1000))); await new Promise((resolve) => window.setTimeout(resolve, 250)) } setSendPauseCountdown(null); return !shouldStop() }
+  const waitForSendPause = async (shouldStop: () => boolean) => { const duration = 20000; const endsAt = Date.now() + duration; setSendPauseCountdown(20); while (true) { if (shouldStop()) { setSendPauseCountdown(null); return false } const remaining = Math.max(0, Math.ceil((endsAt - Date.now()) / 1000)); setSendPauseCountdown(remaining); if (remaining === 0) break; await new Promise((resolve) => window.setTimeout(resolve, 100)) } setSendPauseCountdown(null); return !shouldStop() }
   const [failedIds, setFailedIds] = useState<string[]>([])
   const [telegramDestinations, setTelegramDestinations] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
